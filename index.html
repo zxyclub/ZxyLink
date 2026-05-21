@@ -19,7 +19,13 @@
         </main>
 
         <footer>
-            <p>使用 <a href="https://pages.github.com" target="_blank">GitHub Pages</a> + <a href="https://gist.github.com" target="_blank">GitHub Gist</a> 托管</p>
+            <p>使用 <a href="https://gist.github.com" target="_blank">GitHub Gist</a> 数据托管</p>
+            <p class="deploy-info">
+                页面可部署至：<br>
+                <a href="https://pages.github.com" target="_blank">GitHub Pages</a> |
+                <a href="https://vercel.com" target="_blank">Vercel</a> |
+                <a href="https://pages.cloudflare.com" target="_blank">Cloudflare Pages</a>
+            </p>
         </footer>
     </div>
 
@@ -129,6 +135,21 @@
             color: #666;
             font-size: 0.9rem;
             margin-top: 10px;
+        }
+
+        .deploy-info {
+            margin-top: 15px;
+            font-size: 0.85rem;
+            color: #666;
+        }
+
+        .deploy-info a {
+            color: #00d9ff;
+            text-decoration: none;
+        }
+
+        .deploy-info a:hover {
+            text-decoration: underline;
         }
     </style>
 </body>
