@@ -322,8 +322,8 @@
 
         async function fetchLinks() {
             try {
-                // 直接访问公开 Gist raw 文件（无需 Token）
-                const response = await fetch(`https://gist.githubusercontent.com/zxyclub/${GIST_ID}/raw/zxylinks.json`);
+                // 直接访问公开 Gist raw 文件（带时间戳防止缓存）
+                const response = await fetch(`https://gist.githubusercontent.com/zxyclub/${GIST_ID}/raw/zxylinks.json?t=${Date.now()}`);
                 if (!response.ok) throw new Error('获取数据失败');
                 links = await response.json();
                 if (!Array.isArray(links)) links = [];
