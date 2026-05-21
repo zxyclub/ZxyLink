@@ -24,27 +24,15 @@
     </div>
 
     <script>
-        // GitHub Gist 配置
-        const GIST_ID_KEY = 'gist_id';
-        const GIST_RAW_URL_TEMPLATE = 'https://gist.githubusercontent.com/{username}/{gistId}/raw/links.json';
+        // GitHub Gist 配置（硬编码，无需配置）
+        const GIST_ID = 'Zheng200202/310862d2eee876122d6358950caa04fe';
 
         async function loadLinks() {
-            const gistId = localStorage.getItem(GIST_ID_KEY);
             const container = document.getElementById('linksGrid');
-
-            if (!gistId) {
-                container.innerHTML = `
-                    <div class="empty-state">
-                        <p>📋 尚未配置数据源</p>
-                        <a href="login.html" class="setup-btn">前往设置</a>
-                    </div>
-                `;
-                return;
-            }
 
             try {
                 // 直接通过 raw.githubusercontent.com 访问公开 gist
-                const response = await fetch(`https://gist.githubusercontent.com/${gistId}/raw/links.json`);
+                const response = await fetch(`https://gist.githubusercontent.com/${GIST_ID}/raw/links.json`);
 
                 if (!response.ok) {
                     throw new Error('获取数据失败');
@@ -76,7 +64,7 @@
                 container.innerHTML = `
                     <div class="empty-state">
                         <p>❌ 加载失败</p>
-                        <span class="error-hint">请检查 Gist ID 配置是否正确</span>
+                        <span class="error-hint">请检查网络连接</span>
                     </div>
                 `;
             }
