@@ -24,15 +24,15 @@
     </div>
 
     <script>
-        // GitHub Gist 配置（硬编码，无需配置）
+        // GitHub Gist 配置（硬编码，使用 CDN 加速）
         const GIST_ID = 'Zheng200202/310862d2eee876122d6358950caa04fe';
 
         async function loadLinks() {
             const container = document.getElementById('linksGrid');
 
             try {
-                // 直接通过 raw.githubusercontent.com 访问公开 gist
-                const response = await fetch(`https://gist.githubusercontent.com/${GIST_ID}/raw/links.json`);
+                // 使用 raw.githack.com CDN 加速访问 GitHub Gist
+                const response = await fetch(`https://raw.githack.com/${GIST_ID}/raw/links.json`);
 
                 if (!response.ok) {
                     throw new Error('获取数据失败');
