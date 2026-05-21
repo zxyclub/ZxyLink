@@ -19,20 +19,20 @@
         </main>
 
         <footer>
-            <p>使用 <a href="https://pages.github.com" target="_blank">GitHub Pages</a> + <a href="https://jsonbin.io" target="_blank">JSONBin</a> 托管</p>
+            <p>使用 <a href="https://pages.github.com" target="_blank">GitHub Pages</a> + <a href="https://gist.github.com" target="_blank">GitHub Gist</a> 托管</p>
         </footer>
     </div>
 
     <script>
-        const BIN_ID_KEY = 'jsonbin_id';
-        const API_KEY_KEY = 'jsonbin_apikey';
+        // GitHub Gist 配置
+        const GIST_ID_KEY = 'gist_id';
+        const GIST_RAW_URL_TEMPLATE = 'https://gist.githubusercontent.com/{username}/{gistId}/raw/links.json';
 
         async function loadLinks() {
-            const binId = localStorage.getItem(BIN_ID_KEY);
-            const apiKey = localStorage.getItem(API_KEY_KEY);
+            const gistId = localStorage.getItem(GIST_ID_KEY);
             const container = document.getElementById('linksGrid');
 
-            if (!binId || !apiKey) {
+            if (!gistId) {
                 container.innerHTML = `
                     <div class="empty-state">
                         <p>📋 尚未配置数据源</p>
@@ -43,18 +43,16 @@
             }
 
             try {
-                const response = await fetch(`https://api.jsonbin.io/v3/b/${binId}`, {
-                    headers: {
-                        'X-Access-Key': apiKey
-                    }
-                });
+                // 直接通过 raw.githubusercontent.com 访问公开 gist
+                const response = await fetch(`https://gist.githubusercontent.com/${gistId}/raw/links.json`);
 
-                if (!response.ok) throw new Error('获取数据失败');
+                if (!response.ok) {
+                    throw new Error('获取数据失败');
+                }
 
-                const data = await response.json();
-                const links = data.record.links || [];
+                const links = await response.json();
 
-                if (links.length === 0) {
+                if (!Array.isArray(links) || links.length === 0) {
                     container.innerHTML = `
                         <div class="empty-state">
                             <p>📝 暂无链接</p>
@@ -78,7 +76,7 @@
                 container.innerHTML = `
                     <div class="empty-state">
                         <p>❌ 加载失败</p>
-                        <span class="error-hint">请检查网络或配置</span>
+                        <span class="error-hint">请检查 Gist ID 配置是否正确</span>
                     </div>
                 `;
             }
