@@ -11,61 +11,139 @@
         <header>
             <h1>🔗 收藏夹</h1>
             <p class="subtitle">一些有用的网站收藏</p>
+            <a href="login.html" class="admin-link">管理</a>
         </header>
 
-        <main class="links-grid">
-            <a href="https://github.com" class="link-card" target="_blank">
-                <div class="card-icon">🐙</div>
-                <div class="card-content">
-                    <h3>GitHub</h3>
-                    <p>全球开发者社区</p>
-                </div>
-            </a>
-
-            <a href="https://stackoverflow.com" class="link-card" target="_blank">
-                <div class="card-icon">📚</div>
-                <div class="card-content">
-                    <h3>Stack Overflow</h3>
-                    <p>编程问答平台</p>
-                </div>
-            </a>
-
-            <a href="https://developer.mozilla.org" class="link-card" target="_blank">
-                <div class="card-icon">📖</div>
-                <div class="card-content">
-                    <h3>MDN</h3>
-                    <p>Web开发文档</p>
-                </div>
-            </a>
-
-            <a href="https://www.google.com" class="link-card" target="_blank">
-                <div class="card-icon">🔍</div>
-                <div class="card-content">
-                    <h3>Google</h3>
-                    <p>搜索引擎</p>
-                </div>
-            </a>
-
-            <a href="https://chat.openai.com" class="link-card" target="_blank">
-                <div class="card-icon">🤖</div>
-                <div class="card-content">
-                    <h3>ChatGPT</h3>
-                    <p>AI对话助手</p>
-                </div>
-            </a>
-
-            <a href="#" class="link-card add-new" onclick="alert('点击编辑 index.html 添加你的链接！')">
-                <div class="card-icon">➕</div>
-                <div class="card-content">
-                    <h3>添加链接</h3>
-                    <p>点击这里添加新网站</p>
-                </div>
-            </a>
+        <main class="links-grid" id="linksGrid">
+            <div class="loading">加载中...</div>
         </main>
 
         <footer>
-            <p>使用 <a href="https://pages.github.com" target="_blank">GitHub Pages</a> 托管</p>
+            <p>使用 <a href="https://pages.github.com" target="_blank">GitHub Pages</a> + <a href="https://jsonbin.io" target="_blank">JSONBin</a> 托管</p>
         </footer>
     </div>
+
+    <script>
+        const BIN_ID_KEY = 'jsonbin_id';
+        const API_KEY_KEY = 'jsonbin_apikey';
+
+        async function loadLinks() {
+            const binId = localStorage.getItem(BIN_ID_KEY);
+            const apiKey = localStorage.getItem(API_KEY_KEY);
+            const container = document.getElementById('linksGrid');
+
+            if (!binId || !apiKey) {
+                container.innerHTML = `
+                    <div class="empty-state">
+                        <p>📋 尚未配置数据源</p>
+                        <a href="login.html" class="setup-btn">前往设置</a>
+                    </div>
+                `;
+                return;
+            }
+
+            try {
+                const response = await fetch(`https://api.jsonbin.io/v3/b/${binId}`, {
+                    headers: {
+                        'X-Access-Key': apiKey
+                    }
+                });
+
+                if (!response.ok) throw new Error('获取数据失败');
+
+                const data = await response.json();
+                const links = data.record.links || [];
+
+                if (links.length === 0) {
+                    container.innerHTML = `
+                        <div class="empty-state">
+                            <p>📝 暂无链接</p>
+                            <a href="login.html" class="setup-btn">添加链接</a>
+                        </div>
+                    `;
+                    return;
+                }
+
+                container.innerHTML = links.map(link => `
+                    <a href="${link.url}" class="link-card" target="_blank">
+                        <div class="card-icon">${link.icon || '🌐'}</div>
+                        <div class="card-content">
+                            <h3>${link.title}</h3>
+                            <p>${link.description || ''}</p>
+                        </div>
+                    </a>
+                `).join('');
+            } catch (error) {
+                console.error(error);
+                container.innerHTML = `
+                    <div class="empty-state">
+                        <p>❌ 加载失败</p>
+                        <span class="error-hint">请检查网络或配置</span>
+                    </div>
+                `;
+            }
+        }
+
+        loadLinks();
+    </script>
+
+    <style>
+        .admin-link {
+            display: inline-block;
+            margin-top: 15px;
+            padding: 8px 20px;
+            background: rgba(255, 255, 255, 0.1);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            border-radius: 20px;
+            color: #888;
+            text-decoration: none;
+            font-size: 0.9rem;
+            transition: all 0.3s;
+        }
+
+        .admin-link:hover {
+            background: rgba(255, 255, 255, 0.15);
+            color: #fff;
+        }
+
+        .loading {
+            grid-column: 1 / -1;
+            text-align: center;
+            color: #666;
+            padding: 60px;
+        }
+
+        .empty-state {
+            grid-column: 1 / -1;
+            text-align: center;
+            padding: 60px;
+            background: rgba(255, 255, 255, 0.03);
+            border-radius: 16px;
+            border: 1px dashed rgba(255, 255, 255, 0.1);
+        }
+
+        .empty-state p {
+            color: #888;
+            margin-bottom: 20px;
+            font-size: 1.1rem;
+        }
+
+        .setup-btn {
+            display: inline-block;
+            padding: 12px 28px;
+            background: linear-gradient(90deg, #00d9ff, #00ff88);
+            border-radius: 8px;
+            color: #1a1a2e;
+            text-decoration: none;
+            font-weight: bold;
+        }
+
+        .error-hint {
+            display: block;
+            color: #666;
+            font-size: 0.9rem;
+            margin-top: 10px;
+        }
+    </style>
 </body>
 </html>
