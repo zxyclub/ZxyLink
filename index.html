@@ -31,14 +31,14 @@
 
     <script>
         // GitHub Gist 配置（硬编码）
-        const GIST_ID = '310862d2eee876122d6358950caa04fe';
+        const GIST_ID = 'd12a422a770678dcbb46b8f8050ad2c6';
 
         async function loadLinks() {
             const container = document.getElementById('linksGrid');
 
             try {
-                // 直接访问 Gist raw 文件
-                const response = await fetch(`https://gist.githubusercontent.com/zxyclub/310862d2eee876122d6358950caa04fe/raw/links.json`);
+                // 直接访问公开 Gist raw 文件
+                const response = await fetch(`https://gist.githubusercontent.com/zxyclub/${GIST_ID}/raw/zxylink.json`);
 
                 if (!response.ok) {
                     throw new Error('获取数据失败');

@@ -263,16 +263,15 @@
             <div id="linksList" class="links-list"></div>
         </div>
 
-        <div class="admin-section config-section">
+        <div class="admin-section config-section" id="tokenSection">
             <h3>🔑 GitHub Token 配置</h3>
             <div class="config-row">
                 <input type="text" id="githubToken" placeholder="GitHub Personal Access Token">
             </div>
-            <button class="btn-add" onclick="saveConfig()">保存配置</button>
+            <button class="btn-add" onclick="saveToken()">保存 Token</button>
             <p class="help-text">
-                <strong>配置说明：</strong><br>
-                生成 <a href="https://github.com/settings/tokens" target="_blank">Personal Access Token</a>，勾选 <code>gist</code> 权限并填入即可<br>
-                Token 仅存储在本地浏览器，安全可靠
+                <strong>注意：</strong>Token 仅用于修改数据，读取无需 Token<br>
+                <a href="https://github.com/settings/tokens" target="_blank">生成 Token</a>，仅需勾选 <code>gist</code> 权限
             </p>
         </div>
     </div>
@@ -280,10 +279,9 @@
     <div id="toast" class="toast"></div>
 
     <script>
-        // 硬编码配置
-        const GIST_FULL_ID = 'zxyclub/310862d2eee876122d6358950caa04fe';
-        const GIST_ID = '310862d2eee876122d6358950caa04fe';
-        const GITHUB_TOKEN_KEY = 'github_token';
+        // Gist 配置（硬编码）
+        const GIST_ID = 'd12a422a770678dcbb46b8f8050ad2c6';
+        const TOKEN_KEY = 'github_token';
 
         let links = [];
 
@@ -301,32 +299,31 @@
             setTimeout(() => toast.classList.remove('show'), 3000);
         }
 
-        function getConfig() {
-            return {
-                token: localStorage.getItem(GITHUB_TOKEN_KEY)
-            };
+        function getToken() {
+            return localStorage.getItem(TOKEN_KEY);
         }
 
-        function saveConfig() {
+        function saveToken() {
             const token = document.getElementById('githubToken').value.trim();
             if (token) {
-                localStorage.setItem(GITHUB_TOKEN_KEY, token);
-                showToast('配置已保存！');
-                fetchLinks();
+                localStorage.setItem(TOKEN_KEY, token);
+                showToast('Token 已保存！');
             } else {
-                showToast('请填写 Token', true);
+                showToast('请输入 Token', true);
             }
         }
 
-        function loadConfig() {
-            const config = getConfig();
-            if (config.token) document.getElementById('githubToken').value = config.token;
+        function loadToken() {
+            const token = getToken();
+            if (token) {
+                document.getElementById('githubToken').value = token;
+            }
         }
 
         async function fetchLinks() {
             try {
-                // 直接访问 Gist raw 文件，避免 API 频率限制
-                const response = await fetch(`https://gist.githubusercontent.com/zxyclub/310862d2eee876122d6358950caa04fe/raw/links.json`);
+                // 直接访问公开 Gist raw 文件（无需 Token）
+                const response = await fetch(`https://gist.githubusercontent.com/zxyclub/${GIST_ID}/raw/zxylink.json`);
                 if (!response.ok) throw new Error('获取数据失败');
                 links = await response.json();
                 if (!Array.isArray(links)) links = [];
@@ -338,8 +335,8 @@
         }
 
         async function saveLinks() {
-            const config = getConfig();
-            if (!config.token) {
+            const token = getToken();
+            if (!token) {
                 showToast('请先配置 Token', true);
                 return;
             }
@@ -349,13 +346,13 @@
                 const response = await fetch(`https://api.github.com/gists/${GIST_ID}`, {
                     method: 'PATCH',
                     headers: {
-                        'Authorization': 'Bearer ' + config.token,
+                        'Authorization': 'Bearer ' + token,
                         'Content-Type': 'application/json',
                         'Accept': 'application/vnd.github+json'
                     },
                     body: JSON.stringify({
                         files: {
-                            'links.json': {
+                            'zxylink.json': {
                                 content: JSON.stringify(links, null, 2)
                             }
                         }
@@ -452,7 +449,7 @@
         };
 
         checkAuth();
-        loadConfig();
+        loadToken();
         fetchLinks();
     </script>
 </body>
