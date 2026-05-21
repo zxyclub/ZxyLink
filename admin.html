@@ -325,11 +325,10 @@
 
         async function fetchLinks() {
             try {
-                // 通过 GitHub API 获取 Gist 数据
-                const response = await fetch(`https://api.github.com/gists/${GIST_ID}`);
+                // 直接访问 Gist raw 文件，避免 API 频率限制
+                const response = await fetch(`https://gist.githubusercontent.com/zxyclub/310862d2eee876122d6358950caa04fe/raw/links.json`);
                 if (!response.ok) throw new Error('获取数据失败');
-                const data = await response.json();
-                links = JSON.parse(data.files['links.json'].content);
+                links = await response.json();
                 if (!Array.isArray(links)) links = [];
                 renderLinks();
             } catch (error) {
