@@ -1,0 +1,271 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>私密收藏</title>
+    <link rel="stylesheet" href="style.css">
+    <style>
+        .private-container {
+            max-width: 1000px;
+            margin: 40px auto;
+            padding: 0 20px;
+        }
+
+        .private-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 30px;
+        }
+
+        .back-link {
+            padding: 8px 20px;
+            background: rgba(255, 255, 255, 0.1);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            border-radius: 20px;
+            color: #888;
+            text-decoration: none;
+            font-size: 0.9rem;
+            transition: all 0.3s;
+        }
+
+        .back-link:hover {
+            background: rgba(255, 255, 255, 0.15);
+            color: #fff;
+        }
+
+        .login-card {
+            max-width: 450px;
+            margin: 80px auto;
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 16px;
+            padding: 40px;
+        }
+
+        .login-card h2 {
+            text-align: center;
+            margin-bottom: 20px;
+            font-size: 1.6rem;
+        }
+
+        .login-card p {
+            color: #888;
+            text-align: center;
+            margin-bottom: 24px;
+            font-size: 0.9rem;
+            line-height: 1.6;
+        }
+
+        .login-card input {
+            width: 100%;
+            padding: 12px 16px;
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 8px;
+            color: #fff;
+            font-size: 1rem;
+            margin-bottom: 16px;
+            font-family: monospace;
+        }
+
+        .login-card input:focus {
+            outline: none;
+            border-color: #00d9ff;
+        }
+
+        .login-card button {
+            width: 100%;
+            padding: 14px;
+            background: linear-gradient(90deg, #00d9ff, #00ff88);
+            border: none;
+            border-radius: 8px;
+            color: #1a1a2e;
+            font-size: 1rem;
+            font-weight: bold;
+            cursor: pointer;
+            transition: transform 0.2s;
+        }
+
+        .login-card button:hover {
+            transform: scale(1.02);
+        }
+
+        .loading {
+            grid-column: 1 / -1;
+            text-align: center;
+            color: #666;
+            padding: 60px;
+        }
+
+        .empty-state {
+            grid-column: 1 / -1;
+            text-align: center;
+            padding: 60px;
+            background: rgba(255, 255, 255, 0.03);
+            border-radius: 16px;
+            border: 1px dashed rgba(255, 255, 255, 0.1);
+        }
+
+        .empty-state p {
+            color: #888;
+            margin-bottom: 20px;
+            font-size: 1.1rem;
+        }
+
+        .error-msg {
+            color: #ff6b6b;
+            text-align: center;
+            margin-bottom: 16px;
+        }
+
+        .success-msg {
+            color: #00ff88;
+            text-align: center;
+            margin-bottom: 16px;
+        }
+    </style>
+</head>
+<body>
+    <div class="private-container">
+        <div class="private-header">
+            <h1>🔒 私密收藏</h1>
+            <a href="index.html" class="back-link">返回主页</a>
+        </div>
+
+        <div id="loginArea">
+            <div class="login-card">
+                <h2>🔐 访问私密内容</h2>
+                <p>输入 GitHub Token 访问您的私密收藏</p>
+                <p id="errorMsg" class="error-msg" style="display: none;"></p>
+                <p id="successMsg" class="success-msg" style="display: none;"></p>
+                <input type="text" id="privateToken" placeholder="输入 GitHub Token">
+                <button onclick="accessPrivate()">访问</button>
+            </div>
+        </div>
+
+        <div id="linksArea" style="display: none;">
+            <main class="links-grid" id="privateLinksGrid">
+                <div class="loading">加载中...</div>
+            </main>
+        </div>
+    </div>
+
+    <script>
+        const PRIVATE_FILENAME = 'zxylink-private.json';
+        const TOKEN_STORAGE_KEY = 'zxylink_private_token';
+
+        function showError(msg) {
+            const errorMsg = document.getElementById('errorMsg');
+            errorMsg.textContent = msg;
+            errorMsg.style.display = 'block';
+            document.getElementById('successMsg').style.display = 'none';
+        }
+
+        function showSuccess(msg) {
+            const successMsg = document.getElementById('successMsg');
+            successMsg.textContent = msg;
+            successMsg.style.display = 'block';
+            document.getElementById('errorMsg').style.display = 'none';
+        }
+
+        function renderLinks(links) {
+            const container = document.getElementById('privateLinksGrid');
+            
+            if (!Array.isArray(links) || links.length === 0) {
+                container.innerHTML = `
+                    <div class="empty-state">
+                        <p>📝 暂无私密链接</p>
+                    </div>
+                `;
+                return;
+            }
+
+            container.innerHTML = links.map(link => `
+                <a href="${link.url}" class="link-card" target="_blank">
+                    <div class="card-icon">${link.icon || '🌐'}</div>
+                    <div class="card-content">
+                        <h3>${link.title}</h3>
+                        <p>${link.description || ''}</p>
+                    </div>
+                </a>
+            `).join('');
+        }
+
+        async function loadPrivateLinks(token) {
+            try {
+                // 获取用户所有 Gist
+                const response = await fetch('https://api.github.com/gists', {
+                    headers: {
+                        'Authorization': 'Bearer ' + token,
+                        'Accept': 'application/vnd.github+json'
+                    }
+                });
+
+                if (!response.ok) {
+                    throw new Error('Token 无效或权限不足');
+                }
+
+                const gists = await response.json();
+                
+                // 查找包含目标文件的 Gist
+                let targetGist = null;
+                for (const gist of gists) {
+                    if (gist.files && gist.files[PRIVATE_FILENAME]) {
+                        targetGist = gist;
+                        break;
+                    }
+                }
+
+                if (!targetGist) {
+                    throw new Error(`未找到包含 ${PRIVATE_FILENAME} 的 Gist`);
+                }
+
+                // 获取文件内容
+                const fileContent = targetGist.files[PRIVATE_FILENAME].content;
+                const links = JSON.parse(fileContent);
+
+                // 显示内容区域，隐藏登录区域
+                document.getElementById('loginArea').style.display = 'none';
+                document.getElementById('linksArea').style.display = 'block';
+
+                renderLinks(links);
+                localStorage.setItem(TOKEN_STORAGE_KEY, token);
+                showSuccess('访问成功！');
+
+            } catch (error) {
+                console.error(error);
+                showError(error.message);
+            }
+        }
+
+        function accessPrivate() {
+            const token = document.getElementById('privateToken').value.trim();
+            
+            if (!token) {
+                showError('请输入 Token');
+                return;
+            }
+
+            loadPrivateLinks(token);
+        }
+
+        // 页面加载时检查是否有保存的 Token
+        document.addEventListener('DOMContentLoaded', () => {
+            const savedToken = localStorage.getItem(TOKEN_STORAGE_KEY);
+            if (savedToken) {
+                document.getElementById('privateToken').value = savedToken;
+                loadPrivateLinks(savedToken);
+            }
+        });
+
+        // 按下回车访问
+        document.getElementById('privateToken').addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') {
+                accessPrivate();
+            }
+        });
+    </script>
+</body>
+</html>
