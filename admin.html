@@ -295,11 +295,7 @@
 
         let links = [];
 
-        function checkAuth() {
-            if (sessionStorage.getItem('isLoggedIn') !== 'true') {
-                window.location.href = 'login.html';
-            }
-        }
+
 
         function showToast(msg, isError = false) {
             const toast = document.getElementById('toast');
@@ -487,7 +483,6 @@
             }
         };
 
-        checkAuth();
         loadToken();
         fetchLinks();
     </script>
