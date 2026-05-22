@@ -464,20 +464,33 @@
                 if (!response.ok) throw new Error('Token 无效或权限不足');
                 
                 const gists = await response.json();
-                let targetGist = null;
+                let targetGistId = null;
                 for (const gist of gists) {
                     if (gist.files && gist.files[PRIVATE_FILENAME]) {
-                        targetGist = gist;
+                        targetGistId = gist.id;
                         break;
                     }
                 }
 
-                if (targetGist) {
-                    privateGistId = targetGist.id;
-                    const content = targetGist.files[PRIVATE_FILENAME].content;
-                    if (content && content.trim() !== '') {
-                        privateLinks = JSON.parse(content);
-                        if (!Array.isArray(privateLinks)) privateLinks = [];
+                if (targetGistId) {
+                    // 获取完整的 Gist 内容（包含文件内容）
+                    const gistResponse = await fetch(`https://api.github.com/gists/${targetGistId}`, {
+                        headers: {
+                            'Authorization': 'Bearer ' + token,
+                            'Accept': 'application/vnd.github+json'
+                        }
+                    });
+
+                    if (gistResponse.ok) {
+                        const targetGist = await gistResponse.json();
+                        privateGistId = targetGistId;
+                        const content = targetGist.files[PRIVATE_FILENAME].content;
+                        if (content && content.trim() !== '') {
+                            privateLinks = JSON.parse(content);
+                            if (!Array.isArray(privateLinks)) privateLinks = [];
+                        } else {
+                            privateLinks = [];
+                        }
                     } else {
                         privateLinks = [];
                     }

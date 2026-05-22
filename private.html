@@ -210,19 +210,31 @@
                 const gists = await response.json();
                 
                 // 查找包含目标文件的 Gist
-                let targetGist = null;
+                let targetGistId = null;
                 for (const gist of gists) {
                     if (gist.files && gist.files[PRIVATE_FILENAME]) {
-                        targetGist = gist;
+                        targetGistId = gist.id;
                         break;
                     }
                 }
 
-                if (!targetGist) {
+                if (!targetGistId) {
                     throw new Error(`未找到包含 ${PRIVATE_FILENAME} 的 Gist`);
                 }
 
-                // 获取文件内容
+                // 获取完整的 Gist 内容（包含文件内容）
+                const gistResponse = await fetch(`https://api.github.com/gists/${targetGistId}`, {
+                    headers: {
+                        'Authorization': 'Bearer ' + token,
+                        'Accept': 'application/vnd.github+json'
+                    }
+                });
+
+                if (!gistResponse.ok) {
+                    throw new Error('获取 Gist 内容失败');
+                }
+
+                const targetGist = await gistResponse.json();
                 const fileContent = targetGist.files[PRIVATE_FILENAME].content;
                 if (!fileContent || fileContent.trim() === '') {
                     throw new Error('私密文件内容为空，请在管理后台添加私密链接');
