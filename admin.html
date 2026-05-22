@@ -164,6 +164,15 @@
             display: none;
         }
 
+        .disabled-section {
+            opacity: 0.5;
+            pointer-events: none;
+        }
+
+        .hidden {
+            display: none !important;
+        }
+
         .empty-msg {
             text-align: center;
             color: #666;
@@ -247,7 +256,7 @@
             <a href="index.html" class="logout-btn">返回主页</a>
         </div>
 
-        <div class="admin-section">
+        <div id="editSection" class="admin-section hidden">
             <h2>➕ 添加新链接</h2>
             <form id="addForm" class="form-row">
                 <input type="text" class="icon-input" id="newIcon" value="🌐" maxlength="2">
@@ -260,6 +269,7 @@
 
         <div class="admin-section">
             <h2>📋 链接列表</h2>
+            <div id="noTokenMsg" class="empty-msg hidden">请先配置 GitHub Token 以启用修改功能</div>
             <div id="linksList" class="links-list"></div>
         </div>
 
@@ -308,9 +318,31 @@
             if (token) {
                 localStorage.setItem(TOKEN_KEY, token);
                 showToast('Token 已保存！');
+                toggleEditMode(true);
             } else {
+                localStorage.removeItem(TOKEN_KEY);
                 showToast('请输入 Token', true);
+                toggleEditMode(false);
             }
+        }
+
+        function toggleEditMode(hasToken) {
+            const editSection = document.getElementById('editSection');
+            const linksList = document.getElementById('linksList');
+            const noTokenMsg = document.getElementById('noTokenMsg');
+            
+            if (hasToken) {
+                editSection.classList.remove('hidden');
+                noTokenMsg.classList.add('hidden');
+                linksList.classList.remove('hidden');
+            } else {
+                editSection.classList.add('hidden');
+                if (links.length === 0) {
+                    noTokenMsg.classList.remove('hidden');
+                    linksList.classList.add('hidden');
+                }
+            }
+            renderLinks();
         }
 
         function loadToken() {
@@ -318,6 +350,7 @@
             if (token) {
                 document.getElementById('githubToken').value = token;
             }
+            toggleEditMode(!!token);
         }
 
         async function fetchLinks() {
@@ -373,10 +406,19 @@
 
         function renderLinks() {
             const container = document.getElementById('linksList');
+            const hasToken = getToken();
+            
             if (links.length === 0) {
-                container.innerHTML = '<p class="empty-msg">暂无链接，请添加</p>';
+                container.innerHTML = hasToken ? '<p class="empty-msg">暂无链接，请添加</p>' : '';
                 return;
             }
+
+            const actionsHtml = hasToken ? `
+                <div class="actions">
+                    <button class="btn-edit" onclick="editLink(${index})">编辑</button>
+                    <button class="btn-delete" onclick="deleteLink(${index})">删除</button>
+                </div>
+            ` : '';
 
             container.innerHTML = links.map((link, index) => `
                 <div class="link-item" data-index="${index}">
@@ -384,10 +426,7 @@
                     <div class="title">${link.title}</div>
                     <div class="url">${link.url}</div>
                     <div class="desc">${link.description || ''}</div>
-                    <div class="actions">
-                        <button class="btn-edit" onclick="editLink(${index})">编辑</button>
-                        <button class="btn-delete" onclick="deleteLink(${index})">删除</button>
-                    </div>
+                    ${actionsHtml}
                 </div>
             `).join('');
         }
