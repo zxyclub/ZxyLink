@@ -696,8 +696,8 @@
                 <input type="url" value="${link.url}" id="editUrl">
                 <input type="text" value="${link.description || ''}" id="editDesc">
                 <div class="actions">
-                    <button class="btn-save" onclick="savePublicEdit(${index})">保存</button>
-                    <button class="btn-cancel" onclick="renderPublicLinks()">取消</button>
+                    <button class="btn-save" style="display:inline-block" onclick="savePublicEdit(${index})">保存</button>
+                    <button class="btn-cancel" style="display:inline-block" onclick="renderPublicLinks()">取消</button>
                 </div>
             `;
             document.getElementById('editTitle').focus();
@@ -752,8 +752,8 @@
                 <input type="url" value="${link.url}" id="editPrivateUrl">
                 <input type="text" value="${link.description || ''}" id="editPrivateDesc">
                 <div class="actions">
-                    <button class="btn-save" onclick="savePrivateEdit(${index})">保存</button>
-                    <button class="btn-cancel" onclick="renderPrivateLinks()">取消</button>
+                    <button class="btn-save" style="display:inline-block" onclick="savePrivateEdit(${index})">保存</button>
+                    <button class="btn-cancel" style="display:inline-block" onclick="renderPrivateLinks()">取消</button>
                 </div>
             `;
             document.getElementById('editPrivateTitle').focus();
