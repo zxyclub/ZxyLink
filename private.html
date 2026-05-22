@@ -235,7 +235,11 @@
                 }
 
                 const targetGist = await gistResponse.json();
-                const fileContent = targetGist.files[PRIVATE_FILENAME].content;
+                const privateFile = targetGist.files ? targetGist.files[PRIVATE_FILENAME] : null;
+                if (!privateFile) {
+                    throw new Error(`未找到 ${PRIVATE_FILENAME} 文件`);
+                }
+                const fileContent = privateFile.content;
                 if (!fileContent || fileContent.trim() === '') {
                     throw new Error('私密文件内容为空，请在管理后台添加私密链接');
                 }
