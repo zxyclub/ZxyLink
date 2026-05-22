@@ -474,8 +474,13 @@
 
                 if (targetGist) {
                     privateGistId = targetGist.id;
-                    privateLinks = JSON.parse(targetGist.files[PRIVATE_FILENAME].content);
-                    if (!Array.isArray(privateLinks)) privateLinks = [];
+                    const content = targetGist.files[PRIVATE_FILENAME].content;
+                    if (content && content.trim() !== '') {
+                        privateLinks = JSON.parse(content);
+                        if (!Array.isArray(privateLinks)) privateLinks = [];
+                    } else {
+                        privateLinks = [];
+                    }
                 } else {
                     privateLinks = [];
                 }

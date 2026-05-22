@@ -224,6 +224,9 @@
 
                 // 获取文件内容
                 const fileContent = targetGist.files[PRIVATE_FILENAME].content;
+                if (!fileContent || fileContent.trim() === '') {
+                    throw new Error('私密文件内容为空，请在管理后台添加私密链接');
+                }
                 const links = JSON.parse(fileContent);
 
                 // 显示内容区域，隐藏登录区域
