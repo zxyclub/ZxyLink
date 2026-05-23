@@ -433,7 +433,7 @@
             <button class="btn-add" onclick="saveToken()">保存 Token</button>
             <p class="help-text">
                 <strong>注意：</strong>Token 仅用于修改数据，读取无需 Token<br>
-                <a href="https://github.com/settings/tokens" target="_blank">生成 Token</a>，仅需勾选<code>gist</code> 权限
+                <a href="https://github.com/settings/tokens" target="_blank">生成 Token</a>，仅需勾选 <code>gist</code> 权限
             </p>
         </div>
     </div>
@@ -546,12 +546,8 @@
             try {
                 const response = await fetch(`https://gist.githubusercontent.com/zxyclub/${PUBLIC_GIST_ID}/raw/${PUBLIC_FILENAME}?t=${Date.now()}`);
                 if (!response.ok) throw new Error('获取数据失败');
-                const data = await response.json();
-                // 支持新的对象格式 {links} 和旧的数组格式                if (Array.isArray(data)) {
-                    publicLinks = data;
-                } else {
-                    publicLinks = data.links || [];
-                }
+                publicLinks = await response.json();
+                if (!Array.isArray(publicLinks)) publicLinks = [];
                 renderPublicLinks();
             } catch (error) {
                 showToast('加载公开数据失败', true);

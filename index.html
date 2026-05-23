@@ -33,7 +33,7 @@
 
     <script>
         const GIST_ID = 'd12a422a770678dcbb46b8f8050ad2c6';
-
+        const TOKEN_KEY = 'github_token';
         let allLinks = [];
         let currentGroup = 'all';
 
@@ -47,16 +47,9 @@
                     throw new Error('获取数据失败');
                 }
 
-                const data = await response.json();
+                allLinks = await response.json();
 
-                // 支持新的对象格式 {links} 和旧的数组格式
-                if (Array.isArray(data)) {
-                    allLinks = data;
-                } else {
-                    allLinks = data.links || [];
-                }
-
-                if (allLinks.length === 0) {
+                if (!Array.isArray(allLinks) || allLinks.length === 0) {
                     container.innerHTML = `
                         <div class="empty-state">
                             <p>📝 暂无链接</p>
@@ -96,7 +89,7 @@
                     btn.classList.add('active');
                     currentGroup = btn.dataset.group;
                     renderLinks();
-);
+                });
             });
         }
 
@@ -126,6 +119,26 @@
             `).join('');
         }
 
+        function loadAvatar() {
+            const token = localStorage.getItem(TOKEN_KEY);
+            if (token) {
+                fetch('https://api.github.com/user', {
+                    headers: {
+                        'Authorization': 'Bearer ' + token,
+                        'Accept': 'application/vnd.github+json'
+                    }
+                })
+                .then(res => res.json())
+                .then(data => {
+                    if (data.avatar_url) {
+                        document.getElementById('avatar').src = data.avatar_url;
+                    }
+                })
+                .catch(err => console.log('获取头像失败', err));
+            }
+        }
+
+        loadAvatar();
         loadLinks();
     </script>
 
@@ -147,7 +160,6 @@
             height: 36px;
             border-radius: 50%;
             border: 2px solid rgba(255, 255, 255, 0.2);
-            cursor: default;
         }
 
         .admin-link {
