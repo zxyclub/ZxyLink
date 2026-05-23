@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>私密收藏</title>
+    <title>调试页面</title>
     <link rel="stylesheet" href="style.css">
     <style>
         .private-container {
@@ -173,7 +173,7 @@
 <body>
     <div class="private-container">
         <div class="private-header">
-            <h1>🔒 私密收藏</h1>
+            <h1>� 调试页面</h1>
             <div style="display: flex; align-items: center; gap: 15px;">
                 <img src="img/avatar1.jpg" alt="avatar" style="width:36px;height:36px;border-radius:50%;border:2px solid rgba(255,255,255,0.2);">
                 <a href="index.html" class="back-link">返回主页</a>
@@ -182,8 +182,8 @@
 
         <div id="loginArea">
             <div class="login-card">
-                <h2>🔐 访问私密内容</h2>
-                <p>输入 GitHub Token 访问您的私密收藏</p>
+                <h2>� 访问调试内容</h2>
+                <p>输入 Token 访问调试数据</p>
                 <p id="errorMsg" class="error-msg" style="display: none;"></p>
                 <p id="successMsg" class="success-msg" style="display: none;"></p>
                 <input type="text" id="privateToken" placeholder="输入 GitHub Token">
@@ -271,6 +271,7 @@
                     <div class="card-icon">${link.icon || '🌐'}</div>
                     <div class="card-content">
                         <h3>${link.title}</h3>
+                        ${link.group ? `<span class="card-group">${link.group}</span>` : ''}
                     </div>
                 </a>
             `).join('');
