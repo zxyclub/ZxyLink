@@ -33,6 +33,7 @@
             height: 36px;
             border-radius: 50%;
             border: 2px solid rgba(255, 255, 255, 0.2);
+            cursor: default;
         }
 
         .back-link {
@@ -232,11 +233,13 @@
     </div>
 
     <script>
+        const PUBLIC_GIST_ID = 'd12a422a770678dcbb46b8f8050ad2c6';
         const PRIVATE_FILENAME = 'zxylink-private.json';
         const TOKEN_STORAGE_KEY = 'zxylink_private_token';
-        const AVATAR_KEY = 'zxylink_private_avatar';
+        const DEFAULT_AVATAR = 'data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAxMDAgMTAwIj48Y2lyY2xlIGN4PSI1MCIgY3k9IjUwIiByPSI0NSIgZmlsbD0iIzMzMyIgc3Ryb2tlPSIjNjY2IiBzdHJva2Utd2lkdGg9IjIiLz48dGV4dCB4PSI1MCIgeT0iNTUiIHRleHQtYW5jaG9yPSJtaWRkbGUiIGZpbGw9IiM5OTkiIGZvbnQtc2l6ZT0iNDAiIGZvbnQtZmFtaWx5PSJBcmlhbCI+PC90ZXh0Pjwvc3ZnPg==';
         let allLinks = [];
         let currentGroup = 'all';
+        let globalAvatar = null;
 
         function showError(msg) {
             const errorMsg = document.getElementById('errorMsg');
@@ -252,10 +255,20 @@
             document.getElementById('errorMsg').style.display = 'none';
         }
 
-        function loadAvatar() {
-            const avatar = localStorage.getItem(AVATAR_KEY);
-            if (avatar) {
-                document.getElementById('avatar').src = avatar;
+        async function loadPublicAvatar() {
+            try {
+                const response = await fetch(`https://gist.githubusercontent.com/zxyclub/${PUBLIC_GIST_ID}/raw/zxylinks.json?t=${Date.now()}`);
+                if (response.ok) {
+                    const data = await response.json();
+                    if (!Array.isArray(data) && data.avatar) {
+                        globalAvatar = data.avatar;
+                        document.getElementById('avatar').src = globalAvatar;
+                    } else {
+                        document.getElementById('avatar').src = DEFAULT_AVATAR;
+                    }
+                }
+            } catch (e) {
+                document.getElementById('avatar').src = DEFAULT_AVATAR;
             }
         }
 
@@ -381,7 +394,7 @@
         }
 
         document.addEventListener('DOMContentLoaded', () => {
-            loadAvatar();
+            loadPublicAvatar();
             const savedToken = localStorage.getItem(TOKEN_STORAGE_KEY);
             if (savedToken) {
                 document.getElementById('privateToken').value = savedToken;

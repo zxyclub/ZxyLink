@@ -33,8 +33,10 @@
 
     <script>
         const GIST_ID = 'd12a422a770678dcbb46b8f8050ad2c6';
+        const DEFAULT_AVATAR = 'data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAxMDAgMTAwIj48Y2lyY2xlIGN4PSI1MCIgY3k9IjUwIiByPSI0NSIgZmlsbD0iIzMzMyIgc3Ryb2tlPSIjNjY2IiBzdHJva2Utd2lkdGg9IjIiLz48dGV4dCB4PSI1MCIgeT0iNTUiIHRleHQtYW5jaG9yPSJtaWRkbGUiIGZpbGw9IiM5OTkiIGZvbnQtc2l6ZT0iNDAiIGZvbnQtZmFtaWx5PSJBcmlhbCI+PC90ZXh0Pjwvc3ZnPg==';
         let allLinks = [];
         let currentGroup = 'all';
+        let globalAvatar = null;
 
         async function loadLinks() {
             const container = document.getElementById('linksGrid');
@@ -46,9 +48,25 @@
                     throw new Error('获取数据失败');
                 }
 
-                allLinks = await response.json();
+                const data = await response.json();
 
-                if (!Array.isArray(allLinks) || allLinks.length === 0) {
+                // 支持新的对象格式 {avatar, links} 和旧的数组格式
+                if (Array.isArray(data)) {
+                    allLinks = data;
+                    globalAvatar = null;
+                } else {
+                    allLinks = data.links || [];
+                    globalAvatar = data.avatar || null;
+                }
+
+                // 设置头像
+                if (globalAvatar) {
+                    document.getElementById('avatar').src = globalAvatar;
+                } else {
+                    document.getElementById('avatar').src = DEFAULT_AVATAR;
+                }
+
+                if (allLinks.length === 0) {
                     container.innerHTML = `
                         <div class="empty-state">
                             <p>📝 暂无链接</p>
@@ -118,40 +136,6 @@
             `).join('');
         }
 
-        function loadAvatar() {
-            const avatar = localStorage.getItem('zxylink_avatar');
-            if (avatar) {
-                document.getElementById('avatar').src = avatar;
-            }
-        }
-
-        function setupAvatarUpload() {
-            const avatarImg = document.getElementById('avatar');
-            avatarImg.style.cursor = 'pointer';
-            avatarImg.title = '点击更换头像';
-
-            avatarImg.addEventListener('click', () => {
-                const input = document.createElement('input');
-                input.type = 'file';
-                input.accept = 'image/*';
-                input.onchange = (e) => {
-                    const file = e.target.files[0];
-                    if (file) {
-                        const reader = new FileReader();
-                        reader.onload = (evt) => {
-                            const base64 = evt.target.result;
-                            localStorage.setItem('zxylink_avatar', base64);
-                            avatarImg.src = base64;
-                        };
-                        reader.readAsDataURL(file);
-                    }
-                };
-                input.click();
-            });
-        }
-
-        loadAvatar();
-        setupAvatarUpload();
         loadLinks();
     </script>
 
@@ -173,6 +157,7 @@
             height: 36px;
             border-radius: 50%;
             border: 2px solid rgba(255, 255, 255, 0.2);
+            cursor: default;
         }
 
         .admin-link {
