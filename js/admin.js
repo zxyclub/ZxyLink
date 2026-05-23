@@ -9,6 +9,8 @@ let privateLinks = [];
 let privateGistId = null;
 let publicCurrentGroup = 'all';
 let privateCurrentGroup = 'all';
+let publicSearchKeyword = '';
+let privateSearchKeyword = '';
 
 function showToast(msg, isError = false) {
     const toast = document.getElementById('toast');
@@ -332,14 +334,20 @@ function renderPublicLinks() {
     const container = document.getElementById('linksList');
     const hasToken = getToken();
 
-    const filteredLinks = publicCurrentGroup === 'all'
+    let filteredLinks = publicCurrentGroup === 'all'
         ? publicLinks
         : publicLinks.filter(link => link.group === publicCurrentGroup);
 
+    if (publicSearchKeyword) {
+        filteredLinks = filteredLinks.filter(link =>
+            link.title.toLowerCase().includes(publicSearchKeyword)
+        );
+    }
+
     if (filteredLinks.length === 0) {
-        container.innerHTML = publicCurrentGroup === 'all'
+        container.innerHTML = publicCurrentGroup === 'all' && !publicSearchKeyword
             ? (hasToken ? '<p class="empty-msg">暂无链接，请添加</p>' : '')
-            : '<p class="empty-msg">该分组暂无链接</p>';
+            : '<p class="empty-msg">未找到匹配的链接</p>';
         renderPublicCategories();
         return;
     }
@@ -378,14 +386,20 @@ function renderPrivateLinks() {
     const container = document.getElementById('privateLinksList');
     const hasToken = getToken();
 
-    const filteredLinks = privateCurrentGroup === 'all'
+    let filteredLinks = privateCurrentGroup === 'all'
         ? privateLinks
         : privateLinks.filter(link => link.group === privateCurrentGroup);
 
+    if (privateSearchKeyword) {
+        filteredLinks = filteredLinks.filter(link =>
+            link.title.toLowerCase().includes(privateSearchKeyword)
+        );
+    }
+
     if (filteredLinks.length === 0) {
-        container.innerHTML = privateCurrentGroup === 'all'
+        container.innerHTML = privateCurrentGroup === 'all' && !privateSearchKeyword
             ? (hasToken ? '<p class="empty-msg">暂无私密链接，请添加</p>' : '')
-            : '<p class="empty-msg">该分组暂无链接</p>';
+            : '<p class="empty-msg">未找到匹配的链接</p>';
         renderPrivateCategories();
         return;
     }
@@ -547,3 +561,40 @@ window.deletePrivateLink = async function (index) {
 
 loadToken();
 fetchPublicLinks();
+
+function initPublicSearch() {
+    const searchInput = document.getElementById('publicSearchInput');
+    const searchBtn = document.getElementById('publicSearchBtn');
+
+    searchInput.addEventListener('keypress', (e) => {
+        if (e.key === 'Enter') {
+            publicSearchKeyword = searchInput.value.trim().toLowerCase();
+            renderPublicLinks();
+        }
+    });
+
+    searchBtn.addEventListener('click', () => {
+        publicSearchKeyword = searchInput.value.trim().toLowerCase();
+        renderPublicLinks();
+    });
+}
+
+function initPrivateSearch() {
+    const searchInput = document.getElementById('privateSearchInput');
+    const searchBtn = document.getElementById('privateSearchBtn');
+
+    searchInput.addEventListener('keypress', (e) => {
+        if (e.key === 'Enter') {
+            privateSearchKeyword = searchInput.value.trim().toLowerCase();
+            renderPrivateLinks();
+        }
+    });
+
+    searchBtn.addEventListener('click', () => {
+        privateSearchKeyword = searchInput.value.trim().toLowerCase();
+        renderPrivateLinks();
+    });
+}
+
+initPublicSearch();
+initPrivateSearch();
