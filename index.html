@@ -11,10 +11,20 @@
         <header>
             <div class="header-top">
                 <div class="header-right">
-                    <img id="avatar" src="https://github.githubassets.com/images/modules/logos_page/GitHub-Mark.png" alt="avatar" class="header-avatar">
-                    <a href="admin.html" class="admin-link">管理</a>
-                    <a href="private.html" class="admin-link">私密</a>
+                <div class="avatar-selector" id="avatarSelector">
+                    <img id="currentAvatar" src="avatars/avatar1.png" alt="avatar" class="header-avatar">
+                    <div class="avatar-dropdown" id="avatarDropdown">
+                        <img src="avatars/avatar1.png" data-avatar="avatars/avatar1.png" class="avatar-option">
+                        <img src="avatars/avatar2.png" data-avatar="avatars/avatar2.png" class="avatar-option">
+                        <img src="avatars/avatar3.png" data-avatar="avatars/avatar3.png" class="avatar-option">
+                        <img src="avatars/avatar4.png" data-avatar="avatars/avatar4.png" class="avatar-option">
+                        <img src="avatars/avatar5.png" data-avatar="avatars/avatar5.png" class="avatar-option">
+                        <img src="avatars/avatar6.png" data-avatar="avatars/avatar6.png" class="avatar-option">
+                    </div>
                 </div>
+                <a href="admin.html" class="admin-link">管理</a>
+                <a href="private.html" class="admin-link">私密</a>
+            </div>
             </div>
             <h1>🔗 收藏夹</h1>
             <nav class="category-nav" id="categoryNav">
@@ -28,14 +38,43 @@
 
         <footer>
             <p>使用 <a href="https://gist.github.com" target="_blank">GitHub Gist</a> 数据托管</p>
+            <p>该项目可以部署在 <a href="https://vercel.com" target="_blank">Vercel</a> · <a href="https://cloudflare.com" target="_blank">Cloudflare</a> · <a href="https://maoziyun.com" target="_blank">帽子云</a></p>
         </footer>
     </div>
 
     <script>
         const GIST_ID = 'd12a422a770678dcbb46b8f8050ad2c6';
-        const TOKEN_KEY = 'github_token';
+        const AVATAR_KEY = 'selected_avatar';
         let allLinks = [];
         let currentGroup = 'all';
+
+        function initAvatarSelector() {
+            const savedAvatar = localStorage.getItem(AVATAR_KEY);
+            if (savedAvatar) {
+                document.getElementById('currentAvatar').src = savedAvatar;
+            }
+
+            const selector = document.getElementById('avatarSelector');
+            const dropdown = document.getElementById('avatarDropdown');
+
+            selector.addEventListener('click', (e) => {
+                e.stopPropagation();
+                dropdown.classList.toggle('show');
+            });
+
+            dropdown.querySelectorAll('.avatar-option').forEach(img => {
+                img.addEventListener('click', () => {
+                    const avatarSrc = img.dataset.avatar;
+                    document.getElementById('currentAvatar').src = avatarSrc;
+                    localStorage.setItem(AVATAR_KEY, avatarSrc);
+                    dropdown.classList.remove('show');
+                });
+            });
+
+            document.addEventListener('click', () => {
+                dropdown.classList.remove('show');
+            });
+        }
 
         async function loadLinks() {
             const container = document.getElementById('linksGrid');
@@ -119,26 +158,7 @@
             `).join('');
         }
 
-        function loadAvatar() {
-            const token = localStorage.getItem(TOKEN_KEY);
-            if (token) {
-                fetch('https://api.github.com/user', {
-                    headers: {
-                        'Authorization': 'Bearer ' + token,
-                        'Accept': 'application/vnd.github+json'
-                    }
-                })
-                .then(res => res.json())
-                .then(data => {
-                    if (data.avatar_url) {
-                        document.getElementById('avatar').src = data.avatar_url;
-                    }
-                })
-                .catch(err => console.log('获取头像失败', err));
-            }
-        }
-
-        loadAvatar();
+        initAvatarSelector();
         loadLinks();
     </script>
 
@@ -160,6 +180,46 @@
             height: 36px;
             border-radius: 50%;
             border: 2px solid rgba(255, 255, 255, 0.2);
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .avatar-selector {
+            position: relative;
+        }
+
+        .avatar-dropdown {
+            position: absolute;
+            top: 100%;
+            right: 0;
+            margin-top: 10px;
+            display: none;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 8px;
+            padding: 12px;
+            background: rgba(30, 30, 50, 0.95);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 12px;
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.5);
+            z-index: 1000;
+        }
+
+        .avatar-dropdown.show {
+            display: grid;
+        }
+
+        .avatar-option {
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            cursor: pointer;
+            border: 2px solid transparent;
+            transition: all 0.3s;
+        }
+
+        .avatar-option:hover {
+            border-color: #00d9ff;
+            transform: scale(1.1);
         }
 
         .admin-link {
