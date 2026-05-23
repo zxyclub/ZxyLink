@@ -12,8 +12,8 @@
             <div class="header-top">
                 <div class="header-right">
                     <img id="avatar" src="img/avatar1.jpg" alt="avatar" class="header-avatar">
+                    <a href="private.html" class="admin-link">调试</a>
                     <a href="admin.html" class="admin-link">管理</a>
-                    <a href="private.html" class="admin-link">私密</a>
                 </div>
             </div>
             <h1>🔗 收藏夹</h1>
@@ -120,7 +120,6 @@
                     <div class="card-icon">${link.icon || '🌐'}</div>
                     <div class="card-content">
                         <h3>${link.title}</h3>
-                        ${link.group ? `<span class="card-group">${link.group}</span>` : ''}
                     </div>
                 </a>
             `).join('');
