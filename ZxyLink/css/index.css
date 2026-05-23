@@ -65,6 +65,31 @@
     border-color: transparent;
 }
 
+.search-box {
+    margin-top: 15px;
+}
+
+.search-box input {
+    width: 100%;
+    padding: 12px 16px;
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 12px;
+    color: #fff;
+    font-size: 1rem;
+    transition: all 0.3s;
+}
+
+.search-box input:focus {
+    outline: none;
+    border-color: #00d9ff;
+    background: rgba(255, 255, 255, 0.08);
+}
+
+.search-box input::placeholder {
+    color: #666;
+}
+
 .card-group {
     display: inline-block;
     font-size: 0.75rem;

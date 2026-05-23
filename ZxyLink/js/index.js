@@ -2,6 +2,7 @@ const GIST_ID = 'd12a422a770678dcbb46b8f8050ad2c6';
 const TOKEN_KEY = 'github_token';
 let allLinks = [];
 let currentGroup = 'all';
+let searchTerm = '';
 
 async function loadLinks() {
     const container = document.getElementById('linksGrid');
@@ -61,14 +62,25 @@ function renderCategories() {
 
 function renderLinks() {
     const container = document.getElementById('linksGrid');
-    const filteredLinks = currentGroup === 'all'
+
+    // Filter by group and search term
+    let filteredLinks = currentGroup === 'all'
         ? allLinks
         : allLinks.filter(link => link.group === currentGroup);
+
+    if (searchTerm) {
+        const term = searchTerm.toLowerCase();
+        filteredLinks = filteredLinks.filter(link =>
+            link.title.toLowerCase().includes(term) ||
+            (link.url && link.url.toLowerCase().includes(term)) ||
+            (link.group && link.group.toLowerCase().includes(term))
+        );
+    }
 
     if (filteredLinks.length === 0) {
         container.innerHTML = `
             <div class="empty-state">
-                <p>📂 该分组暂无链接</p>
+                <p>${searchTerm ? '🔍 未找到匹配的链接' : '📂 该分组暂无链接'}</p>
             </div>
         `;
         return;
@@ -104,3 +116,9 @@ function loadAvatar() {
 }
 
 loadLinks();
+
+// 搜索功能
+document.getElementById('searchInput').addEventListener('input', (e) => {
+    searchTerm = e.target.value.trim();
+    renderLinks();
+});
