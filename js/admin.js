@@ -7,6 +7,8 @@ let currentTab = 'public';
 let publicLinks = [];
 let privateLinks = [];
 let privateGistId = null;
+let publicCurrentGroup = 'all';
+let privateCurrentGroup = 'all';
 
 function showToast(msg, isError = false) {
     const toast = document.getElementById('toast');
@@ -109,12 +111,56 @@ window.fillGroup = function(inputId, group) {
     document.getElementById(inputId).value = group;
 };
 
+function renderPublicCategories() {
+    const nav = document.getElementById('publicCategoryNav');
+    const groups = [...new Set(publicLinks.map(link => link.group).filter(Boolean))];
+
+    let html = '<button class="category-btn active" data-group="all">全部</button>';
+    groups.forEach(group => {
+        const isActive = group === publicCurrentGroup ? 'active' : '';
+        html += `<button class="category-btn ${isActive}" data-group="${group}">${group}</button>`;
+    });
+    nav.innerHTML = html;
+
+    nav.querySelectorAll('.category-btn').forEach(btn => {
+        btn.addEventListener('click', () => {
+            document.querySelectorAll('#publicCategoryNav .category-btn').forEach(b => b.classList.remove('active'));
+            btn.classList.add('active');
+            publicCurrentGroup = btn.dataset.group;
+            renderPublicLinks();
+        });
+    });
+}
+
+function renderPrivateCategories() {
+    const nav = document.getElementById('privateCategoryNav');
+    const groups = [...new Set(privateLinks.map(link => link.group).filter(Boolean))];
+
+    let html = '<button class="category-btn active" data-group="all">全部</button>';
+    groups.forEach(group => {
+        const isActive = group === privateCurrentGroup ? 'active' : '';
+        html += `<button class="category-btn ${isActive}" data-group="${group}">${group}</button>`;
+    });
+    nav.innerHTML = html;
+
+    nav.querySelectorAll('.category-btn').forEach(btn => {
+        btn.addEventListener('click', () => {
+            document.querySelectorAll('#privateCategoryNav .category-btn').forEach(b => b.classList.remove('active'));
+            btn.classList.add('active');
+            privateCurrentGroup = btn.dataset.group;
+            renderPrivateLinks();
+        });
+    });
+}
+
 function loadToken() {
     const token = getToken();
     if (token) {
         document.getElementById('githubToken').value = token;
     }
     toggleEditMode(!!token);
+    renderPublicCategories();
+    renderPrivateCategories();
 }
 
 async function fetchPublicLinks() {
@@ -286,14 +332,22 @@ function renderPublicLinks() {
     const container = document.getElementById('linksList');
     const hasToken = getToken();
 
-    if (publicLinks.length === 0) {
-        container.innerHTML = hasToken ? '<p class="empty-msg">暂无链接，请添加</p>' : '';
+    const filteredLinks = publicCurrentGroup === 'all'
+        ? publicLinks
+        : publicLinks.filter(link => link.group === publicCurrentGroup);
+
+    if (filteredLinks.length === 0) {
+        container.innerHTML = publicCurrentGroup === 'all'
+            ? (hasToken ? '<p class="empty-msg">暂无链接，请添加</p>' : '')
+            : '<p class="empty-msg">该分组暂无链接</p>';
+        renderPublicCategories();
         return;
     }
 
-    container.innerHTML = publicLinks.map((link, index) => {
+    container.innerHTML = filteredLinks.map((link, idx) => {
+        const originalIndex = publicLinks.indexOf(link);
         return `
-            <div class="link-item" data-index="${index}">
+            <div class="link-item" data-index="${originalIndex}">
                 <div class="icon-box">${link.icon}</div>
                 <div class="content-box">
                     <div class="info-row">
@@ -303,8 +357,8 @@ function renderPublicLinks() {
                         </div>
                         ${hasToken ? `
                         <div class="actions">
-                            <button class="btn-edit" onclick="editPublicLink(${index})">编辑</button>
-                            <button class="btn-delete" onclick="deletePublicLink(${index})">删除</button>
+                            <button class="btn-edit" onclick="editPublicLink(${originalIndex})">编辑</button>
+                            <button class="btn-delete" onclick="deletePublicLink(${originalIndex})">删除</button>
                         </div>
                         ` : ''}
                     </div>
@@ -317,20 +371,29 @@ function renderPublicLinks() {
     }).join('');
 
     renderCategoryButtons(publicLinks, 'newGroup');
+    renderPublicCategories();
 }
 
 function renderPrivateLinks() {
     const container = document.getElementById('privateLinksList');
     const hasToken = getToken();
 
-    if (privateLinks.length === 0) {
-        container.innerHTML = hasToken ? '<p class="empty-msg">暂无私密链接，请添加</p>' : '';
+    const filteredLinks = privateCurrentGroup === 'all'
+        ? privateLinks
+        : privateLinks.filter(link => link.group === privateCurrentGroup);
+
+    if (filteredLinks.length === 0) {
+        container.innerHTML = privateCurrentGroup === 'all'
+            ? (hasToken ? '<p class="empty-msg">暂无私密链接，请添加</p>' : '')
+            : '<p class="empty-msg">该分组暂无链接</p>';
+        renderPrivateCategories();
         return;
     }
 
-    container.innerHTML = privateLinks.map((link, index) => {
+    container.innerHTML = filteredLinks.map((link, idx) => {
+        const originalIndex = privateLinks.indexOf(link);
         return `
-            <div class="link-item" data-index="${index}">
+            <div class="link-item" data-index="${originalIndex}">
                 <div class="icon-box">${link.icon}</div>
                 <div class="content-box">
                     <div class="info-row">
@@ -340,8 +403,8 @@ function renderPrivateLinks() {
                         </div>
                         ${hasToken ? `
                         <div class="actions">
-                            <button class="btn-edit" onclick="editPrivateLink(${index})">编辑</button>
-                            <button class="btn-delete" onclick="deletePrivateLink(${index})">删除</button>
+                            <button class="btn-edit" onclick="editPrivateLink(${originalIndex})">编辑</button>
+                            <button class="btn-delete" onclick="deletePrivateLink(${originalIndex})">删除</button>
                         </div>
                         ` : ''}
                     </div>
@@ -354,6 +417,7 @@ function renderPrivateLinks() {
     }).join('');
 
     renderCategoryButtons(privateLinks, 'newPrivateGroup');
+    renderPrivateCategories();
 }
 
 function formatUrl(url) {
