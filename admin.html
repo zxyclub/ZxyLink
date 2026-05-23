@@ -777,12 +777,21 @@
             }).join('');
         }
 
+        function formatUrl(url) {
+            if (!url) return '';
+            url = url.trim();
+            if (!/^https?:\/\//i.test(url)) {
+                url = 'https://' + url;
+            }
+            return url;
+        }
+
         document.getElementById('addForm').addEventListener('submit', async function(e) {
             e.preventDefault();
             const newLink = {
                 icon: document.getElementById('newIcon').value || '🌐',
                 title: document.getElementById('newTitle').value,
-                url: document.getElementById('newUrl').value,
+                url: formatUrl(document.getElementById('newUrl').value),
                 description: document.getElementById('newDesc').value
             };
 
@@ -820,7 +829,7 @@
             publicLinks[index] = {
                 icon: document.getElementById('editIcon').value || '🌐',
                 title: document.getElementById('editTitle').value,
-                url: document.getElementById('editUrl').value,
+                url: formatUrl(document.getElementById('editUrl').value),
                 description: document.getElementById('editDesc').value
             };
             await savePublicLinks();
@@ -840,7 +849,7 @@
             const newLink = {
                 icon: document.getElementById('newPrivateIcon').value || '🌐',
                 title: document.getElementById('newPrivateTitle').value,
-                url: document.getElementById('newPrivateUrl').value,
+                url: formatUrl(document.getElementById('newPrivateUrl').value),
                 description: document.getElementById('newPrivateDesc').value
             };
 
@@ -878,7 +887,7 @@
             privateLinks[index] = {
                 icon: document.getElementById('editPrivateIcon').value || '🌐',
                 title: document.getElementById('editPrivateTitle').value,
-                url: document.getElementById('editPrivateUrl').value,
+                url: formatUrl(document.getElementById('editPrivateUrl').value),
                 description: document.getElementById('editPrivateDesc').value
             };
             await savePrivateLinks();
