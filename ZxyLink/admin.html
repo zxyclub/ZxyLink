@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>日木斤-管理后台</title>
+    <link rel="stylesheet" href="css/style.css">
+    <link rel="stylesheet" href="css/admin.css">
+</head>
+<body>
+    <div class="admin-container">
+        <div class="admin-header">
+            <h1>⚙️ 管理后台</h1>
+            <div style="display: flex; align-items: center; gap: 15px;">
+                <img src="img/avatar1.jpg" alt="avatar" style="width:36px;height:36px;border-radius:50%;border:2px solid rgba(255,255,255,0.2);">
+                <a href="index.html" class="logout-btn">返回主页</a>
+            </div>
+        </div>
+
+        <div class="admin-section">
+            <div style="display: flex; gap: 10px; margin-bottom: 20px;">
+                <button class="tab-btn active" onclick="switchTab('public')">公开链接</button>
+                <button class="tab-btn" onclick="switchTab('private')">私密链接</button>
+            </div>
+
+            <div id="publicSection">
+                <div id="editSection" class="hidden">
+                    <h2>➕ 添加新链接</h2>
+                    <form id="addForm" class="form-row">
+                        <div class="form-main">
+                            <input type="text" class="icon-input" id="newIcon" value="🌐" maxlength="2">
+                            <input type="text" id="newTitle" placeholder="网站名称" required>
+                            <input type="text" id="newUrl" placeholder="https://example.com" required>
+                            <input type="text" id="newGroup" placeholder="分组">
+                        </div>
+                        <div class="form-actions">
+                            <button type="submit" class="btn-add">添加</button>
+                        </div>
+                    </form>
+                </div>
+
+                <h2>📋 链接列表</h2>
+                <div id="noTokenMsg" class="empty-msg hidden">请先配置 GitHub Token 以启用修改功能</div>
+                <div id="linksList" class="links-list"></div>
+            </div>
+
+            <div id="privateSection" class="hidden">
+                <div id="privateEditSection" class="hidden">
+                    <h2>➕ 添加新私密链接</h2>
+                    <form id="privateAddForm" class="form-row">
+                        <div class="form-main">
+                            <input type="text" class="icon-input" id="newPrivateIcon" value="🌐" maxlength="2">
+                            <input type="text" id="newPrivateTitle" placeholder="网站名称" required>
+                            <input type="text" id="newPrivateUrl" placeholder="https://example.com" required>
+                            <input type="text" id="newPrivateGroup" placeholder="分组">
+                        </div>
+                        <div class="form-actions">
+                            <button type="submit" class="btn-add">添加</button>
+                        </div>
+                    </form>
+                </div>
+
+                <h2>📋 私密链接列表</h2>
+                <div id="privateNoTokenMsg" class="empty-msg hidden">请先配置 GitHub Token 以启用修改功能</div>
+                <div id="privateLinksList" class="links-list"></div>
+            </div>
+        </div>
+
+        <div class="admin-section config-section" id="tokenSection">
+            <h3>🔑 GitHub Token 配置</h3>
+            <div class="config-row">
+                <input type="text" id="githubToken" placeholder="GitHub Personal Access Token">
+            </div>
+            <button class="btn-add" onclick="saveToken()">保存 Token</button>
+            <p class="help-text">
+                <strong>注意：</strong>Token 仅用于修改数据，读取无需 Token<br>
+                <a href="https://github.com/settings/tokens" target="_blank">生成 Token</a>，仅需勾选 <code>gist</code> 权限
+            </p>
+        </div>
+    </div>
+
+    <div id="toast" class="toast"></div>
+
+    <script src="js/admin.js"></script>
+</body>
+</html>
