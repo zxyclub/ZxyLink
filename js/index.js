@@ -85,9 +85,7 @@ function renderLinks() {
 
     if (searchKeyword) {
         filteredLinks = filteredLinks.filter(link =>
-            link.title.toLowerCase().includes(searchKeyword) ||
-            link.url.toLowerCase().includes(searchKeyword) ||
-            (link.group && link.group.toLowerCase().includes(searchKeyword))
+            link.title.toLowerCase().includes(searchKeyword)
         );
     }
 
