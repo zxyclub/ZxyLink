@@ -47,13 +47,31 @@
         }
 
         .form-row {
-            display: grid;
-            grid-template-columns: 80px 1fr 1fr 100px auto;
+            display: flex;
+            flex-direction: column;
             gap: 12px;
-            align-items: end;
         }
 
-        .form-row input {
+        .form-row .form-main {
+            display: flex;
+            gap: 12px;
+            flex-wrap: wrap;
+        }
+
+        .form-row .icon-input {
+            width: 60px;
+            padding: 10px 12px;
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 8px;
+            color: #fff;
+            text-align: center;
+            font-size: 1.2rem;
+        }
+
+        .form-row .form-main input {
+            flex: 1;
+            min-width: 150px;
             padding: 10px 12px;
             background: rgba(255, 255, 255, 0.05);
             border: 1px solid rgba(255, 255, 255, 0.1);
@@ -66,9 +84,9 @@
             border-color: #00d9ff;
         }
 
-        .form-row .icon-input {
-            text-align: center;
-            font-size: 1.2rem;
+        .form-row .form-actions {
+            display: flex;
+            justify-content: flex-end;
         }
 
         .btn-add {
@@ -88,49 +106,79 @@
         }
 
         .link-item {
-            display: grid;
-            grid-template-columns: 60px 1fr 1fr 100px auto;
-            gap: 12px;
-            align-items: center;
-            padding: 16px;
+            display: flex;
+            align-items: stretch;
             background: rgba(255, 255, 255, 0.03);
             border-radius: 12px;
+            overflow: hidden;
         }
 
-        .link-item .icon {
-            font-size: 1.5rem;
-            text-align: center;
+        .link-item .icon-box {
+            width: 60px;
+            min-height: 80px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: rgba(255, 255, 255, 0.03);
+            font-size: 1.8rem;
+            flex-shrink: 0;
+        }
+
+        .link-item .content-box {
+            flex: 1;
+            padding: 12px;
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            min-width: 0;
+        }
+
+        .link-item .info-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            gap: 12px;
         }
 
         .link-item .title {
             font-weight: bold;
             color: #fff;
-        }
-
-        .link-item .url {
-            color: #888;
-            font-size: 0.9rem;
-            overflow: hidden;
-            text-overflow: ellipsis;
-            white-space: nowrap;
+            font-size: 1rem;
         }
 
         .link-item .desc {
-            color: #666;
+            color: #888;
             font-size: 0.85rem;
         }
 
         .link-item .actions {
             display: flex;
+            gap: 6px;
+            flex-shrink: 0;
+        }
+
+        .link-item .url-row {
+            display: flex;
+            align-items: center;
             gap: 8px;
+            flex-wrap: wrap;
+        }
+
+        .link-item .url {
+            color: #00d9ff;
+            font-size: 0.8rem;
+            word-break: break-all;
+            flex: 1;
+            min-width: 0;
         }
 
         .btn-edit, .btn-delete {
-            padding: 8px 12px;
+            padding: 6px 12px;
             border: none;
             border-radius: 6px;
             cursor: pointer;
-            font-size: 0.85rem;
+            font-size: 0.8rem;
+            white-space: nowrap;
         }
 
         .btn-edit {
@@ -144,29 +192,59 @@
         }
 
         .btn-save {
-            padding: 8px 16px;
+            padding: 6px 12px;
             background: linear-gradient(90deg, #00d9ff, #00ff88);
             border: none;
             border-radius: 6px;
             color: #1a1a2e;
             font-weight: bold;
             cursor: pointer;
-            display: none;
+            font-size: 0.8rem;
         }
 
         .btn-cancel {
-            padding: 8px 16px;
+            padding: 6px 12px;
             background: rgba(255, 255, 255, 0.1);
             border: none;
             border-radius: 6px;
             color: #888;
             cursor: pointer;
-            display: none;
+            font-size: 0.8rem;
         }
 
-        .disabled-section {
-            opacity: 0.5;
-            pointer-events: none;
+        .edit-item {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+            padding: 12px;
+        }
+
+        .edit-item .edit-row {
+            display: flex;
+            gap: 12px;
+            flex-wrap: wrap;
+        }
+
+        .edit-item .edit-row input {
+            flex: 1;
+            min-width: 120px;
+            padding: 8px 12px;
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 6px;
+            color: #fff;
+            font-size: 0.9rem;
+        }
+
+        .edit-item .edit-row input:focus {
+            outline: none;
+            border-color: #00d9ff;
+        }
+
+        .edit-item .edit-actions {
+            display: flex;
+            justify-content: flex-end;
+            gap: 8px;
         }
 
         .hidden {
@@ -192,8 +270,8 @@
         }
 
         .config-row {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
+            display: flex;
+            flex-direction: column;
             gap: 12px;
             margin-bottom: 16px;
         }
@@ -225,6 +303,7 @@
             font-weight: bold;
             opacity: 0;
             transition: all 0.3s ease;
+            z-index: 1000;
         }
 
         .toast.show {
@@ -269,6 +348,25 @@
             color: #1a1a2e;
             border-color: transparent;
         }
+
+        @media (min-width: 768px) {
+            .form-row {
+                flex-direction: row;
+                align-items: flex-end;
+            }
+
+            .form-row .form-main {
+                flex: 1;
+            }
+
+            .config-row {
+                flex-direction: row;
+            }
+
+            .config-row input {
+                flex: 1;
+            }
+        }
     </style>
 </head>
 <body>
@@ -288,11 +386,15 @@
                 <div id="editSection" class="hidden">
                     <h2>➕ 添加新链接</h2>
                     <form id="addForm" class="form-row">
-                        <input type="text" class="icon-input" id="newIcon" value="🌐" maxlength="2">
-                        <input type="text" id="newTitle" placeholder="网站名称" required>
-                        <input type="url" id="newUrl" placeholder="https://example.com" required>
-                        <input type="text" id="newDesc" placeholder="描述">
-                        <button type="submit" class="btn-add">添加</button>
+                        <div class="form-main">
+                            <input type="text" class="icon-input" id="newIcon" value="🌐" maxlength="2">
+                            <input type="text" id="newTitle" placeholder="网站名称" required>
+                            <input type="url" id="newUrl" placeholder="https://example.com" required>
+                            <input type="text" id="newDesc" placeholder="描述">
+                        </div>
+                        <div class="form-actions">
+                            <button type="submit" class="btn-add">添加</button>
+                        </div>
                     </form>
                 </div>
 
@@ -305,11 +407,15 @@
                 <div id="privateEditSection" class="hidden">
                     <h2>➕ 添加新私密链接</h2>
                     <form id="privateAddForm" class="form-row">
-                        <input type="text" class="icon-input" id="newPrivateIcon" value="🌐" maxlength="2">
-                        <input type="text" id="newPrivateTitle" placeholder="网站名称" required>
-                        <input type="url" id="newPrivateUrl" placeholder="https://example.com" required>
-                        <input type="text" id="newPrivateDesc" placeholder="描述">
-                        <button type="submit" class="btn-add">添加</button>
+                        <div class="form-main">
+                            <input type="text" class="icon-input" id="newPrivateIcon" value="🌐" maxlength="2">
+                            <input type="text" id="newPrivateTitle" placeholder="网站名称" required>
+                            <input type="url" id="newPrivateUrl" placeholder="https://example.com" required>
+                            <input type="text" id="newPrivateDesc" placeholder="描述">
+                        </div>
+                        <div class="form-actions">
+                            <button type="submit" class="btn-add">添加</button>
+                        </div>
                     </form>
                 </div>
 
@@ -335,7 +441,6 @@
     <div id="toast" class="toast"></div>
 
     <script>
-        // 配置
         const PUBLIC_GIST_ID = 'd12a422a770678dcbb46b8f8050ad2c6';
         const PUBLIC_FILENAME = 'zxylinks.json';
         const PRIVATE_FILENAME = 'zxylink-private.json';
@@ -375,7 +480,6 @@
         }
 
         function toggleEditMode(hasToken) {
-            // 公开链接
             const editSection = document.getElementById('editSection');
             const linksList = document.getElementById('linksList');
             const noTokenMsg = document.getElementById('noTokenMsg');
@@ -392,7 +496,6 @@
                 }
             }
 
-            // 私密链接
             const privateEditSection = document.getElementById('privateEditSection');
             const privateLinksList = document.getElementById('privateLinksList');
             const privateNoTokenMsg = document.getElementById('privateNoTokenMsg');
@@ -473,7 +576,6 @@
                 }
 
                 if (targetGistId) {
-                    // 获取完整的 Gist 内容（包含文件内容）
                     const gistResponse = await fetch(`https://api.github.com/gists/${targetGistId}`, {
                         headers: {
                             'Authorization': 'Bearer ' + token,
@@ -485,7 +587,6 @@
                         const targetGist = await gistResponse.json();
                         privateGistId = targetGistId;
                         
-                        // 检查目标文件是否存在
                         const privateFile = targetGist.files ? targetGist.files[PRIVATE_FILENAME] : null;
                         if (privateFile && privateFile.content && privateFile.content.trim() !== '') {
                             privateLinks = JSON.parse(privateFile.content);
@@ -551,7 +652,6 @@
 
             try {
                 if (privateGistId) {
-                    // 更新已有的 Gist
                     const response = await fetch(`https://api.github.com/gists/${privateGistId}`, {
                         method: 'PATCH',
                         headers: {
@@ -573,7 +673,6 @@
                         throw new Error(err.message || '保存失败');
                     }
                 } else {
-                    // 创建新的 Gist
                     const response = await fetch('https://api.github.com/gists', {
                         method: 'POST',
                         headers: {
@@ -618,20 +717,26 @@
             }
 
             container.innerHTML = publicLinks.map((link, index) => {
-                const actionsHtml = hasToken ? `
-                    <div class="actions">
-                        <button class="btn-edit" onclick="editPublicLink(${index})">编辑</button>
-                        <button class="btn-delete" onclick="deletePublicLink(${index})">删除</button>
-                    </div>
-                ` : '';
-
                 return `
                     <div class="link-item" data-index="${index}">
-                        <div class="icon">${link.icon}</div>
-                        <div class="title">${link.title}</div>
-                        <div class="url">${link.url}</div>
-                        <div class="desc">${link.description || ''}</div>
-                        ${actionsHtml}
+                        <div class="icon-box">${link.icon}</div>
+                        <div class="content-box">
+                            <div class="info-row">
+                                <div>
+                                    <div class="title">${link.title}</div>
+                                    <div class="desc">${link.description || ''}</div>
+                                </div>
+                                ${hasToken ? `
+                                <div class="actions">
+                                    <button class="btn-edit" onclick="editPublicLink(${index})">编辑</button>
+                                    <button class="btn-delete" onclick="deletePublicLink(${index})">删除</button>
+                                </div>
+                                ` : ''}
+                            </div>
+                            <div class="url-row">
+                                <span class="url">${link.url}</span>
+                            </div>
+                        </div>
                     </div>
                 `;
             }).join('');
@@ -647,26 +752,31 @@
             }
 
             container.innerHTML = privateLinks.map((link, index) => {
-                const actionsHtml = hasToken ? `
-                    <div class="actions">
-                        <button class="btn-edit" onclick="editPrivateLink(${index})">编辑</button>
-                        <button class="btn-delete" onclick="deletePrivateLink(${index})">删除</button>
-                    </div>
-                ` : '';
-
                 return `
                     <div class="link-item" data-index="${index}">
-                        <div class="icon">${link.icon}</div>
-                        <div class="title">${link.title}</div>
-                        <div class="url">${link.url}</div>
-                        <div class="desc">${link.description || ''}</div>
-                        ${actionsHtml}
+                        <div class="icon-box">${link.icon}</div>
+                        <div class="content-box">
+                            <div class="info-row">
+                                <div>
+                                    <div class="title">${link.title}</div>
+                                    <div class="desc">${link.description || ''}</div>
+                                </div>
+                                ${hasToken ? `
+                                <div class="actions">
+                                    <button class="btn-edit" onclick="editPrivateLink(${index})">编辑</button>
+                                    <button class="btn-delete" onclick="deletePrivateLink(${index})">删除</button>
+                                </div>
+                                ` : ''}
+                            </div>
+                            <div class="url-row">
+                                <span class="url">${link.url}</span>
+                            </div>
+                        </div>
                     </div>
                 `;
             }).join('');
         }
 
-        // 公开链接处理
         document.getElementById('addForm').addEventListener('submit', async function(e) {
             e.preventDefault();
             const newLink = {
@@ -688,16 +798,19 @@
             const link = publicLinks[index];
             const item = document.querySelector(`#publicSection [data-index="${index}"]`);
 
+            item.className = 'link-item';
             item.innerHTML = `
-                <div class="icon">
-                    <input type="text" value="${link.icon}" style="width:50px;text-align:center;font-size:1.2rem" id="editIcon">
-                </div>
-                <input type="text" value="${link.title}" id="editTitle">
-                <input type="url" value="${link.url}" id="editUrl">
-                <input type="text" value="${link.description || ''}" id="editDesc">
-                <div class="actions">
-                    <button class="btn-save" style="display:inline-block" onclick="savePublicEdit(${index})">保存</button>
-                    <button class="btn-cancel" style="display:inline-block" onclick="renderPublicLinks()">取消</button>
+                <div class="edit-item">
+                    <div class="edit-row">
+                        <input type="text" value="${link.icon}" style="width:60px;text-align:center" id="editIcon">
+                        <input type="text" value="${link.title}" id="editTitle" placeholder="网站名称">
+                        <input type="url" value="${link.url}" id="editUrl" placeholder="链接">
+                        <input type="text" value="${link.description || ''}" id="editDesc" placeholder="描述">
+                    </div>
+                    <div class="edit-actions">
+                        <button class="btn-save" onclick="savePublicEdit(${index})">保存</button>
+                        <button class="btn-cancel" onclick="renderPublicLinks()">取消</button>
+                    </div>
                 </div>
             `;
             document.getElementById('editTitle').focus();
@@ -722,7 +835,6 @@
             }
         };
 
-        // 私密链接处理
         document.getElementById('privateAddForm').addEventListener('submit', async function(e) {
             e.preventDefault();
             const newLink = {
@@ -744,16 +856,19 @@
             const link = privateLinks[index];
             const item = document.querySelector(`#privateSection [data-index="${index}"]`);
 
+            item.className = 'link-item';
             item.innerHTML = `
-                <div class="icon">
-                    <input type="text" value="${link.icon}" style="width:50px;text-align:center;font-size:1.2rem" id="editPrivateIcon">
-                </div>
-                <input type="text" value="${link.title}" id="editPrivateTitle">
-                <input type="url" value="${link.url}" id="editPrivateUrl">
-                <input type="text" value="${link.description || ''}" id="editPrivateDesc">
-                <div class="actions">
-                    <button class="btn-save" style="display:inline-block" onclick="savePrivateEdit(${index})">保存</button>
-                    <button class="btn-cancel" style="display:inline-block" onclick="renderPrivateLinks()">取消</button>
+                <div class="edit-item">
+                    <div class="edit-row">
+                        <input type="text" value="${link.icon}" style="width:60px;text-align:center" id="editPrivateIcon">
+                        <input type="text" value="${link.title}" id="editPrivateTitle" placeholder="网站名称">
+                        <input type="url" value="${link.url}" id="editPrivateUrl" placeholder="链接">
+                        <input type="text" value="${link.description || ''}" id="editPrivateDesc" placeholder="描述">
+                    </div>
+                    <div class="edit-actions">
+                        <button class="btn-save" onclick="savePrivateEdit(${index})">保存</button>
+                        <button class="btn-cancel" onclick="renderPrivateLinks()">取消</button>
+                    </div>
                 </div>
             `;
             document.getElementById('editPrivateTitle').focus();
