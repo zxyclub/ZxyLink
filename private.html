@@ -13,26 +13,94 @@
         }
 
         .private-header {
+            margin-bottom: 20px;
+        }
+
+        .private-header-top {
             display: flex;
-            justify-content: space-between;
+            justify-content: flex-end;
+            margin-bottom: 15px;
+        }
+
+        .header-right {
+            display: flex;
             align-items: center;
-            margin-bottom: 30px;
+            gap: 10px;
+        }
+
+        .header-avatar {
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            border: 2px solid rgba(255, 255, 255, 0.2);
         }
 
         .back-link {
-            padding: 8px 20px;
+            padding: 8px 16px;
             background: rgba(255, 255, 255, 0.1);
             border: 1px solid rgba(255, 255, 255, 0.2);
             border-radius: 20px;
             color: #888;
             text-decoration: none;
-            font-size: 0.9rem;
+            font-size: 0.85rem;
             transition: all 0.3s;
         }
 
         .back-link:hover {
             background: rgba(255, 255, 255, 0.15);
             color: #fff;
+        }
+
+        .private-title {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .private-title h1 {
+            font-size: 1.6rem;
+        }
+
+        .category-nav {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            margin-top: 15px;
+            padding: 12px;
+            background: rgba(255, 255, 255, 0.03);
+            border-radius: 12px;
+        }
+
+        .category-btn {
+            padding: 6px 16px;
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 16px;
+            color: #888;
+            cursor: pointer;
+            font-size: 0.85rem;
+            transition: all 0.3s;
+        }
+
+        .category-btn:hover {
+            background: rgba(255, 255, 255, 0.1);
+            color: #fff;
+        }
+
+        .category-btn.active {
+            background: linear-gradient(90deg, #00d9ff, #00ff88);
+            color: #1a1a2e;
+            border-color: transparent;
+        }
+
+        .card-group {
+            display: inline-block;
+            font-size: 0.75rem;
+            color: #00d9ff;
+            background: rgba(0, 217, 255, 0.1);
+            padding: 2px 8px;
+            border-radius: 10px;
+            margin-top: 4px;
         }
 
         .login-card {
@@ -130,8 +198,19 @@
 <body>
     <div class="private-container">
         <div class="private-header">
-            <h1>🔒 私密收藏</h1>
-            <a href="index.html" class="back-link">返回主页</a>
+            <div class="private-header-top">
+                <div class="header-right">
+                    <img id="avatar" src="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAxMDAgMTAwIj48Y2lyY2xlIGN4PSI1MCIgY3k9IjUwIiByPSI0NSIgZmlsbD0iIzMzMyIgc3Ryb2tlPSIjNjY2IiBzdHJva2Utd2lkdGg9IjIiLz48dGV4dCB4PSI1MCIgeT0iNTUiIHRleHQtYW5jaG9yPSJtaWRkbGUiIGZpbGw9IiM5OTkiIGZvbnQtc2l6ZT0iNDAiIGZvbnQtZmFtaWx5PSJBcmlhbCI+PC90ZXh0Pjwvc3ZnPg==" alt="avatar" class="header-avatar">
+                    <a href="admin.html" class="back-link">管理</a>
+                    <a href="index.html" class="back-link">返回</a>
+                </div>
+            </div>
+            <div class="private-title">
+                <h1>🔒 私密收藏</h1>
+            </div>
+            <nav class="category-nav" id="categoryNav">
+                <button class="category-btn active" data-group="all">全部</button>
+            </nav>
         </div>
 
         <div id="loginArea">
@@ -155,6 +234,9 @@
     <script>
         const PRIVATE_FILENAME = 'zxylink-private.json';
         const TOKEN_STORAGE_KEY = 'zxylink_private_token';
+        const AVATAR_KEY = 'zxylink_private_avatar';
+        let allLinks = [];
+        let currentGroup = 'all';
 
         function showError(msg) {
             const errorMsg = document.getElementById('errorMsg');
@@ -170,24 +252,55 @@
             document.getElementById('errorMsg').style.display = 'none';
         }
 
-        function renderLinks(links) {
+        function loadAvatar() {
+            const avatar = localStorage.getItem(AVATAR_KEY);
+            if (avatar) {
+                document.getElementById('avatar').src = avatar;
+            }
+        }
+
+        function renderCategories() {
+            const nav = document.getElementById('categoryNav');
+            const groups = [...new Set(allLinks.map(link => link.group).filter(Boolean))];
+
+            let html = '<button class="category-btn active" data-group="all">全部</button>';
+            groups.forEach(group => {
+                const isActive = group === currentGroup ? 'active' : '';
+                html += `<button class="category-btn ${isActive}" data-group="${group}">${group}</button>`;
+            });
+            nav.innerHTML = html;
+
+            nav.querySelectorAll('.category-btn').forEach(btn => {
+                btn.addEventListener('click', () => {
+                    document.querySelectorAll('.category-btn').forEach(b => b.classList.remove('active'));
+                    btn.classList.add('active');
+                    currentGroup = btn.dataset.group;
+                    renderLinks();
+                });
+            });
+        }
+
+        function renderLinks() {
             const container = document.getElementById('privateLinksGrid');
-            
-            if (!Array.isArray(links) || links.length === 0) {
+            const filteredLinks = currentGroup === 'all'
+                ? allLinks
+                : allLinks.filter(link => link.group === currentGroup);
+
+            if (filteredLinks.length === 0) {
                 container.innerHTML = `
                     <div class="empty-state">
-                        <p>📝 暂无私密链接</p>
+                        <p>📂 该分组暂无链接</p>
                     </div>
                 `;
                 return;
             }
 
-            container.innerHTML = links.map(link => `
+            container.innerHTML = filteredLinks.map(link => `
                 <a href="${link.url}" class="link-card" target="_blank">
                     <div class="card-icon">${link.icon || '🌐'}</div>
                     <div class="card-content">
                         <h3>${link.title}</h3>
-                        <p>${link.description || ''}</p>
+                        ${link.group ? `<span class="card-group">${link.group}</span>` : ''}
                     </div>
                 </a>
             `).join('');
@@ -195,7 +308,6 @@
 
         async function loadPrivateLinks(token) {
             try {
-                // 获取用户所有 Gist
                 const response = await fetch('https://api.github.com/gists', {
                     headers: {
                         'Authorization': 'Bearer ' + token,
@@ -208,8 +320,7 @@
                 }
 
                 const gists = await response.json();
-                
-                // 查找包含目标文件的 Gist
+
                 let targetGistId = null;
                 for (const gist of gists) {
                     if (gist.files && gist.files[PRIVATE_FILENAME]) {
@@ -222,7 +333,6 @@
                     throw new Error(`未找到包含 ${PRIVATE_FILENAME} 的 Gist`);
                 }
 
-                // 获取完整的 Gist 内容（包含文件内容）
                 const gistResponse = await fetch(`https://api.github.com/gists/${targetGistId}`, {
                     headers: {
                         'Authorization': 'Bearer ' + token,
@@ -243,13 +353,13 @@
                 if (!fileContent || fileContent.trim() === '') {
                     throw new Error('私密文件内容为空，请在管理后台添加私密链接');
                 }
-                const links = JSON.parse(fileContent);
+                allLinks = JSON.parse(fileContent);
 
-                // 显示内容区域，隐藏登录区域
                 document.getElementById('loginArea').style.display = 'none';
                 document.getElementById('linksArea').style.display = 'block';
 
-                renderLinks(links);
+                renderCategories();
+                renderLinks();
                 localStorage.setItem(TOKEN_STORAGE_KEY, token);
                 showSuccess('访问成功！');
 
@@ -261,7 +371,7 @@
 
         function accessPrivate() {
             const token = document.getElementById('privateToken').value.trim();
-            
+
             if (!token) {
                 showError('请输入 Token');
                 return;
@@ -270,8 +380,8 @@
             loadPrivateLinks(token);
         }
 
-        // 页面加载时检查是否有保存的 Token
         document.addEventListener('DOMContentLoaded', () => {
+            loadAvatar();
             const savedToken = localStorage.getItem(TOKEN_STORAGE_KEY);
             if (savedToken) {
                 document.getElementById('privateToken').value = savedToken;
@@ -279,7 +389,6 @@
             }
         });
 
-        // 按下回车访问
         document.getElementById('privateToken').addEventListener('keypress', (e) => {
             if (e.key === 'Enter') {
                 accessPrivate();

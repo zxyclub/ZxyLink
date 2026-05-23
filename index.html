@@ -33,7 +33,6 @@
 
     <script>
         const GIST_ID = 'd12a422a770678dcbb46b8f8050ad2c6';
-        const TOKEN_KEY = 'github_token';
         let allLinks = [];
         let currentGroup = 'all';
 
@@ -120,25 +119,39 @@
         }
 
         function loadAvatar() {
-            const token = localStorage.getItem(TOKEN_KEY);
-            if (token) {
-                fetch('https://api.github.com/user', {
-                    headers: {
-                        'Authorization': 'Bearer ' + token,
-                        'Accept': 'application/vnd.github+json'
-                    }
-                })
-                .then(res => res.json())
-                .then(data => {
-                    if (data.avatar_url) {
-                        document.getElementById('avatar').src = data.avatar_url;
-                    }
-                })
-                .catch(err => console.log('获取头像失败', err));
+            const avatar = localStorage.getItem('zxylink_avatar');
+            if (avatar) {
+                document.getElementById('avatar').src = avatar;
             }
         }
 
+        function setupAvatarUpload() {
+            const avatarImg = document.getElementById('avatar');
+            avatarImg.style.cursor = 'pointer';
+            avatarImg.title = '点击更换头像';
+
+            avatarImg.addEventListener('click', () => {
+                const input = document.createElement('input');
+                input.type = 'file';
+                input.accept = 'image/*';
+                input.onchange = (e) => {
+                    const file = e.target.files[0];
+                    if (file) {
+                        const reader = new FileReader();
+                        reader.onload = (evt) => {
+                            const base64 = evt.target.result;
+                            localStorage.setItem('zxylink_avatar', base64);
+                            avatarImg.src = base64;
+                        };
+                        reader.readAsDataURL(file);
+                    }
+                };
+                input.click();
+            });
+        }
+
         loadAvatar();
+        setupAvatarUpload();
         loadLinks();
     </script>
 
