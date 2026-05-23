@@ -6,8 +6,17 @@ let searchKeyword = '';
 
 function initSearch() {
     const searchInput = document.getElementById('searchInput');
-    searchInput.addEventListener('input', (e) => {
-        searchKeyword = e.target.value.trim().toLowerCase();
+    const searchBtn = document.getElementById('searchBtn');
+
+    searchInput.addEventListener('keypress', (e) => {
+        if (e.key === 'Enter') {
+            searchKeyword = searchInput.value.trim().toLowerCase();
+            renderLinks();
+        }
+    });
+
+    searchBtn.addEventListener('click', () => {
+        searchKeyword = searchInput.value.trim().toLowerCase();
         renderLinks();
     });
 }
