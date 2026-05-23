@@ -2,6 +2,7 @@ const PRIVATE_FILENAME = 'zxylink-private.json';
 const TOKEN_STORAGE_KEY = 'zxylink_private_token';
 let allPrivateLinks = [];
 let currentPrivateGroup = 'all';
+let privateSearchKeyword = '';
 
 function showError(msg) {
     const errorMsg = document.getElementById('errorMsg');
@@ -40,9 +41,15 @@ function renderCategories(links) {
 
 function renderLinks(links) {
     const container = document.getElementById('privateLinksGrid');
-    const filteredLinks = currentPrivateGroup === 'all'
+    let filteredLinks = currentPrivateGroup === 'all'
         ? links
         : links.filter(link => link.group === currentPrivateGroup);
+
+    if (privateSearchKeyword) {
+        filteredLinks = filteredLinks.filter(link =>
+            link.title.toLowerCase().includes(privateSearchKeyword)
+        );
+    }
 
     if (!Array.isArray(links) || links.length === 0) {
         container.innerHTML = `
@@ -56,7 +63,7 @@ function renderLinks(links) {
     if (filteredLinks.length === 0) {
         container.innerHTML = `
             <div class="empty-state">
-                <p>📂 该分组暂无链接</p>
+                <p>📂 ${privateSearchKeyword ? '未找到匹配的链接' : '该分组暂无链接'}</p>
             </div>
         `;
         return;
@@ -166,3 +173,22 @@ document.getElementById('privateToken').addEventListener('keypress', (e) => {
         accessPrivate();
     }
 });
+
+function initPrivateSearch() {
+    const searchInput = document.getElementById('privateSearchInput');
+    const searchBtn = document.getElementById('privateSearchBtn');
+
+    searchInput.addEventListener('keypress', (e) => {
+        if (e.key === 'Enter') {
+            privateSearchKeyword = searchInput.value.trim().toLowerCase();
+            renderLinks(allPrivateLinks);
+        }
+    });
+
+    searchBtn.addEventListener('click', () => {
+        privateSearchKeyword = searchInput.value.trim().toLowerCase();
+        renderLinks(allPrivateLinks);
+    });
+}
+
+initPrivateSearch();
