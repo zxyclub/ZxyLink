@@ -91,6 +91,24 @@ function switchTab(tab) {
     }
 }
 
+function renderCategoryButtons(links, inputId) {
+    const container = document.getElementById(inputId + 'Categories');
+    const groups = [...new Set(links.map(link => link.group).filter(Boolean))];
+
+    if (groups.length === 0) {
+        container.innerHTML = '';
+        return;
+    }
+
+    container.innerHTML = groups.map(group =>
+        `<button type="button" class="category-quick-btn" onclick="fillGroup('${inputId}', '${group}')">${group}</button>`
+    ).join('');
+}
+
+window.fillGroup = function(inputId, group) {
+    document.getElementById(inputId).value = group;
+};
+
 function loadToken() {
     const token = getToken();
     if (token) {
@@ -297,6 +315,8 @@ function renderPublicLinks() {
             </div>
         `;
     }).join('');
+
+    renderCategoryButtons(publicLinks, 'newGroup');
 }
 
 function renderPrivateLinks() {
@@ -332,6 +352,8 @@ function renderPrivateLinks() {
             </div>
         `;
     }).join('');
+
+    renderCategoryButtons(privateLinks, 'newPrivateGroup');
 }
 
 function formatUrl(url) {
