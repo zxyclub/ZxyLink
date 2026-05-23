@@ -131,7 +131,10 @@
     <div class="private-container">
         <div class="private-header">
             <h1>🔒 私密收藏</h1>
-            <a href="index.html" class="back-link">返回主页</a>
+            <div style="display: flex; align-items: center; gap: 15px;">
+                <img src="img/avatar1.jpg" alt="avatar" style="width:36px;height:36px;border-radius:50%;border:2px solid rgba(255,255,255,0.2);">
+                <a href="index.html" class="back-link">返回主页</a>
+            </div>
         </div>
 
         <div id="loginArea">
@@ -146,6 +149,9 @@
         </div>
 
         <div id="linksArea" style="display: none;">
+            <nav class="category-nav" id="privateCategoryNav">
+                <button class="category-btn active" data-group="all">全部</button>
+            </nav>
             <main class="links-grid" id="privateLinksGrid">
                 <div class="loading">加载中...</div>
             </main>
@@ -155,6 +161,8 @@
     <script>
         const PRIVATE_FILENAME = 'zxylink-private.json';
         const TOKEN_STORAGE_KEY = 'zxylink_private_token';
+        let allPrivateLinks = [];
+        let currentPrivateGroup = 'all';
 
         function showError(msg) {
             const errorMsg = document.getElementById('errorMsg');
@@ -170,9 +178,33 @@
             document.getElementById('errorMsg').style.display = 'none';
         }
 
+        function renderCategories(links) {
+            const nav = document.getElementById('privateCategoryNav');
+            const groups = [...new Set(links.map(link => link.group).filter(Boolean))];
+
+            let html = '<button class="category-btn active" data-group="all">全部</button>';
+            groups.forEach(group => {
+                const isActive = group === currentPrivateGroup ? 'active' : '';
+                html += `<button class="category-btn ${isActive}" data-group="${group}">${group}</button>`;
+            });
+            nav.innerHTML = html;
+
+            nav.querySelectorAll('.category-btn').forEach(btn => {
+                btn.addEventListener('click', () => {
+                    document.querySelectorAll('#privateCategoryNav .category-btn').forEach(b => b.classList.remove('active'));
+                    btn.classList.add('active');
+                    currentPrivateGroup = btn.dataset.group;
+                    renderLinks(links);
+                });
+            });
+        }
+
         function renderLinks(links) {
             const container = document.getElementById('privateLinksGrid');
-            
+            const filteredLinks = currentPrivateGroup === 'all'
+                ? links
+                : links.filter(link => link.group === currentPrivateGroup);
+
             if (!Array.isArray(links) || links.length === 0) {
                 container.innerHTML = `
                     <div class="empty-state">
@@ -182,12 +214,21 @@
                 return;
             }
 
-            container.innerHTML = links.map(link => `
+            if (filteredLinks.length === 0) {
+                container.innerHTML = `
+                    <div class="empty-state">
+                        <p>📂 该分组暂无链接</p>
+                    </div>
+                `;
+                return;
+            }
+
+            container.innerHTML = filteredLinks.map(link => `
                 <a href="${link.url}" class="link-card" target="_blank">
                     <div class="card-icon">${link.icon || '🌐'}</div>
                     <div class="card-content">
                         <h3>${link.title}</h3>
-                        <p>${link.description || ''}</p>
+                        ${link.group ? `<span class="card-group">${link.group}</span>` : ''}
                     </div>
                 </a>
             `).join('');
@@ -249,6 +290,8 @@
                 document.getElementById('loginArea').style.display = 'none';
                 document.getElementById('linksArea').style.display = 'block';
 
+                allPrivateLinks = links;
+                renderCategories(links);
                 renderLinks(links);
                 localStorage.setItem(TOKEN_STORAGE_KEY, token);
                 showSuccess('访问成功！');
