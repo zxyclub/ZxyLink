@@ -227,7 +227,7 @@
 
         <div id="linksArea" style="display: none;">
             <main class="links-grid" id="privateLinksGrid">
-                <div class="loading">加载�?..</div>
+                <div class="loading">加载中...</div>
             </main>
         </div>
     </div>
@@ -285,7 +285,7 @@
             if (filteredLinks.length === 0) {
                 container.innerHTML = `
                     <div class="empty-state">
-                        <p>📂 该分组暂无链�?/p>
+                        <p>📂 该分组暂无链接</p>
                     </div>
                 `;
                 return;
@@ -312,7 +312,7 @@
                 });
 
                 if (!response.ok) {
-                    throw new Error('Token 无效或权限不�?);
+throw new Error('Token 无效或权限不足');
                 }
 
                 const gists = await response.json();
@@ -326,7 +326,7 @@
                 }
 
                 if (!targetGistId) {
-                    throw new Error(`未找到包�?${PRIVATE_FILENAME} �?Gist`);
+                    throw new Error(`未找到包含 ${PRIVATE_FILENAME} 的 Gist`);
                 }
 
                 const gistResponse = await fetch(`https://api.github.com/gists/${targetGistId}`, {
@@ -343,11 +343,11 @@
                 const targetGist = await gistResponse.json();
                 const privateFile = targetGist.files ? targetGist.files[PRIVATE_FILENAME] : null;
                 if (!privateFile) {
-                    throw new Error(`未找�?${PRIVATE_FILENAME} 文件`);
+                    throw new Error(`未找到 ${PRIVATE_FILENAME} 文件`);
                 }
                 const fileContent = privateFile.content;
                 if (!fileContent || fileContent.trim() === '') {
-                    throw new Error('私密文件内容为空，请在管理后台添加私密链�?);
+                    throw new Error('私密文件内容为空，请在管理后台添加私密链接');
                 }
                 allLinks = JSON.parse(fileContent);
 
@@ -357,8 +357,7 @@
                 renderCategories();
                 renderLinks();
                 localStorage.setItem(TOKEN_STORAGE_KEY, token);
-                showSuccess('访问成功�?);
-
+                showSuccess('访问成功！');
             } catch (error) {
                 console.error(error);
                 showError(error.message);
@@ -369,7 +368,7 @@
             const token = document.getElementById('privateToken').value.trim();
 
             if (!token) {
-                showError('请输�?Token');
+                showError('请输入 Token');
                 return;
             }
 

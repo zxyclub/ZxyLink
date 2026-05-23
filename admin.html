@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>管理后台 - 导航�?/title>
+    <title>管理后台 - 导航页</title>
     <link rel="stylesheet" href="style.css">
     <style>
         .admin-container {
@@ -384,7 +384,7 @@
 
             <div id="publicSection">
                 <div id="editSection" class="hidden">
-                    <h2>�?添加新链�?/h2>
+                    <h2>➕ 添加新链接</h2>
                     <form id="addForm" class="form-row">
                         <div class="form-main">
                             <input type="text" class="icon-input" id="newIcon" value="🌐" maxlength="2">
@@ -399,13 +399,13 @@
                 </div>
 
                 <h2>📋 链接列表</h2>
-                <div id="noTokenMsg" class="empty-msg hidden">请先配置 GitHub Token 以启用修改功�?/div>
+                <div id="noTokenMsg" class="empty-msg hidden">请先配置 GitHub Token 以启用修改功能</div>
                 <div id="linksList" class="links-list"></div>
             </div>
 
             <div id="privateSection" class="hidden">
                 <div id="privateEditSection" class="hidden">
-                    <h2>�?添加新私密链�?/h2>
+                    <h2>➕ 添加新私密链接</h2>
                     <form id="privateAddForm" class="form-row">
                         <div class="form-main">
                             <input type="text" class="icon-input" id="newPrivateIcon" value="🌐" maxlength="2">
@@ -420,7 +420,7 @@
                 </div>
 
                 <h2>📋 私密链接列表</h2>
-                <div id="privateNoTokenMsg" class="empty-msg hidden">请先配置 GitHub Token 以启用修改功�?/div>
+                <div id="privateNoTokenMsg" class="empty-msg hidden">请先配置 GitHub Token 以启用修改功能</div>
                 <div id="privateLinksList" class="links-list"></div>
             </div>
         </div>
@@ -432,8 +432,8 @@
             </div>
             <button class="btn-add" onclick="saveToken()">保存 Token</button>
             <p class="help-text">
-                <strong>注意�?/strong>Token 仅用于修改数据，读取无需 Token<br>
-                <a href="https://github.com/settings/tokens" target="_blank">生成 Token</a>，仅需勾�?<code>gist</code> 权限
+                <strong>注意：</strong>Token 仅用于修改数据，读取无需 Token<br>
+                <a href="https://github.com/settings/tokens" target="_blank">生成 Token</a>，仅需勾选<code>gist</code> 权限
             </p>
         </div>
     </div>
@@ -474,7 +474,7 @@
                 }
             } else {
                 localStorage.removeItem(TOKEN_KEY);
-                showToast('请输�?Token', true);
+                showToast('请输入 Token', true);
                 toggleEditMode(false);
             }
         }
@@ -547,7 +547,7 @@
                 const response = await fetch(`https://gist.githubusercontent.com/zxyclub/${PUBLIC_GIST_ID}/raw/${PUBLIC_FILENAME}?t=${Date.now()}`);
                 if (!response.ok) throw new Error('获取数据失败');
                 const data = await response.json();
-                // 支持新的对象格式 {avatar, links} 和旧的数组格�?                if (Array.isArray(data)) {
+                // 支持新的对象格式 {links} 和旧的数组格式                if (Array.isArray(data)) {
                     publicLinks = data;
                 } else {
                     publicLinks = data.links || [];
@@ -568,7 +568,7 @@
                     }
                 });
 
-                if (!response.ok) throw new Error('Token 无效或权限不�?);
+                if (!response.ok) throw new Error('Token 无效或权限不足');
                 
                 const gists = await response.json();
                 let targetGistId = null;
@@ -704,7 +704,7 @@
                     privateGistId = newGist.id;
                 }
 
-                showToast('保存成功�?);
+                showToast('保存成功！');
             } catch (error) {
                 showToast('保存失败: ' + error.message, true);
                 console.error(error);
@@ -841,7 +841,7 @@
         };
 
         window.deletePublicLink = async function(index) {
-            if (confirm('确定要删除这个链接吗�?)) {
+            if (confirm('确定要删除这个链接吗？')) {
                 publicLinks.splice(index, 1);
                 await savePublicLinks();
                 renderPublicLinks();
@@ -899,7 +899,7 @@
         };
 
         window.deletePrivateLink = async function(index) {
-            if (confirm('确定要删除这个链接吗�?)) {
+            if (confirm('确定要删除这个链接吗？')) {
                 privateLinks.splice(index, 1);
                 await savePrivateLinks();
                 renderPrivateLinks();
