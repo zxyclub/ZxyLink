@@ -390,7 +390,7 @@
                             <input type="text" class="icon-input" id="newIcon" value="🌐" maxlength="2">
                             <input type="text" id="newTitle" placeholder="网站名称" required>
                             <input type="text" id="newUrl" placeholder="https://example.com" required>
-                            <input type="text" id="newDesc" placeholder="描述">
+                            <input type="text" id="newGroup" placeholder="分组">
                         </div>
                         <div class="form-actions">
                             <button type="submit" class="btn-add">添加</button>
@@ -411,7 +411,7 @@
                             <input type="text" class="icon-input" id="newPrivateIcon" value="🌐" maxlength="2">
                             <input type="text" id="newPrivateTitle" placeholder="网站名称" required>
                             <input  id="newPrivateUrl" placeholder="https://example.com" required>
-                            <input type="text" id="newPrivateDesc" placeholder="描述">
+                            <input type="text" id="newPrivateDesc" placeholder="分组">
                         </div>
                         <div class="form-actions">
                             <button type="submit" class="btn-add">添加</button>
@@ -724,7 +724,7 @@
                             <div class="info-row">
                                 <div>
                                     <div class="title">${link.title}</div>
-                                    <div class="desc">${link.description || ''}</div>
+                                    <div class="group">${link.group || ''}</div>
                                 </div>
                                 ${hasToken ? `
                                 <div class="actions">
@@ -759,7 +759,7 @@
                             <div class="info-row">
                                 <div>
                                     <div class="title">${link.title}</div>
-                                    <div class="desc">${link.description || ''}</div>
+                                    <div class="group">${link.group || ''}</div>
                                 </div>
                                 ${hasToken ? `
                                 <div class="actions">
@@ -792,7 +792,7 @@
                 icon: document.getElementById('newIcon').value || '🌐',
                 title: document.getElementById('newTitle').value,
                 url: formatUrl(document.getElementById('newUrl').value),
-                description: document.getElementById('newDesc').value
+                group: document.getElementById('newGroup').value
             };
 
             publicLinks.push(newLink);
@@ -814,7 +814,7 @@
                         <input type="text" value="${link.icon}" style="width:60px;text-align:center" id="editIcon">
                         <input type="text" value="${link.title}" id="editTitle" placeholder="网站名称">
                         <input  value="${link.url}" id="editUrl" placeholder="链接">
-                        <input type="text" value="${link.description || ''}" id="editDesc" placeholder="描述">
+                        <input type="text" value="${link.group || ''}" id="editGroup" placeholder="分组">
                     </div>
                     <div class="edit-actions">
                         <button class="btn-save" onclick="savePublicEdit(${index})">保存</button>
@@ -830,7 +830,7 @@
                 icon: document.getElementById('editIcon').value || '🌐',
                 title: document.getElementById('editTitle').value,
                 url: formatUrl(document.getElementById('editUrl').value),
-                description: document.getElementById('editDesc').value
+                group: document.getElementById('editGroup').value
             };
             await savePublicLinks();
             renderPublicLinks();
@@ -850,7 +850,7 @@
                 icon: document.getElementById('newPrivateIcon').value || '🌐',
                 title: document.getElementById('newPrivateTitle').value,
                 url: formatUrl(document.getElementById('newPrivateUrl').value),
-                description: document.getElementById('newPrivateDesc').value
+                group: document.getElementById('newPrivateGroup').value
             };
 
             privateLinks.push(newLink);
@@ -872,7 +872,7 @@
                         <input type="text" value="${link.icon}" style="width:60px;text-align:center" id="editPrivateIcon">
                         <input type="text" value="${link.title}" id="editPrivateTitle" placeholder="网站名称">
                         <input type="text" value="${link.url}" id="editPrivateUrl" placeholder="链接">
-                        <input type="text" value="${link.description || ''}" id="editPrivateDesc" placeholder="描述">
+                        <input type="text" value="${link.group || ''}" id="editPrivateGroup" placeholder="分组">
                     </div>
                     <div class="edit-actions">
                         <button class="btn-save" onclick="savePrivateEdit(${index})">保存</button>
@@ -888,7 +888,7 @@
                 icon: document.getElementById('editPrivateIcon').value || '🌐',
                 title: document.getElementById('editPrivateTitle').value,
                 url: formatUrl(document.getElementById('editPrivateUrl').value),
-                description: document.getElementById('editPrivateDesc').value
+                group: document.getElementById('editPrivateGroup').value
             };
             await savePrivateLinks();
             renderPrivateLinks();

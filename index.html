@@ -9,12 +9,17 @@
 <body>
     <div class="container">
         <header>
-            <h1>🔗 收藏夹</h1>
-            <p class="subtitle">一些有用的网站收藏</p>
-            <div style="display: flex; gap: 10px; margin-top: 15px;">
-                <a href="admin.html" class="admin-link">管理</a>
-                <a href="private.html" class="admin-link">私密</a>
+            <div class="header-top">
+                <div class="header-right">
+                    <img id="avatar" src="https://github.githubassets.com/images/modules/logos_page/GitHub-Mark.png" alt="avatar" class="header-avatar">
+                    <a href="admin.html" class="admin-link">管理</a>
+                    <a href="private.html" class="admin-link">私密</a>
+                </div>
             </div>
+            <h1>🔗 收藏夹</h1>
+            <nav class="category-nav" id="categoryNav">
+                <button class="category-btn active" data-group="all">全部</button>
+            </nav>
         </header>
 
         <main class="links-grid" id="linksGrid">
@@ -23,34 +28,28 @@
 
         <footer>
             <p>使用 <a href="https://gist.github.com" target="_blank">GitHub Gist</a> 数据托管</p>
-            <p class="deploy-info">
-                页面可部署至：<br>
-                <a href="https://pages.github.com" target="_blank">GitHub Pages</a> |
-                <a href="https://vercel.com" target="_blank">Vercel</a> |
-                <a href="https://pages.cloudflare.com" target="_blank">Cloudflare Pages</a> |
-                <a href="https://maoziyun.com/" target="_blank">帽子云</a>
-            </p>
         </footer>
     </div>
 
     <script>
-        // GitHub Gist 配置（硬编码）
         const GIST_ID = 'd12a422a770678dcbb46b8f8050ad2c6';
+        const TOKEN_KEY = 'github_token';
+        let allLinks = [];
+        let currentGroup = 'all';
 
         async function loadLinks() {
             const container = document.getElementById('linksGrid');
 
             try {
-                // 直接访问公开 Gist raw 文件（带时间戳防止缓存）
                 const response = await fetch(`https://gist.githubusercontent.com/zxyclub/${GIST_ID}/raw/zxylinks.json?t=${Date.now()}`);
 
                 if (!response.ok) {
                     throw new Error('获取数据失败');
                 }
 
-                const links = await response.json();
+                allLinks = await response.json();
 
-                if (!Array.isArray(links) || links.length === 0) {
+                if (!Array.isArray(allLinks) || allLinks.length === 0) {
                     container.innerHTML = `
                         <div class="empty-state">
                             <p>📝 暂无链接</p>
@@ -60,15 +59,8 @@
                     return;
                 }
 
-                container.innerHTML = links.map(link => `
-                    <a href="${link.url}" class="link-card" target="_blank">
-                        <div class="card-icon">${link.icon || '🌐'}</div>
-                        <div class="card-content">
-                            <h3>${link.title}</h3>
-                            <p>${link.description || ''}</p>
-                        </div>
-                    </a>
-                `).join('');
+                renderCategories();
+                renderLinks();
             } catch (error) {
                 console.error(error);
                 container.innerHTML = `
@@ -80,26 +72,152 @@
             }
         }
 
+        function renderCategories() {
+            const nav = document.getElementById('categoryNav');
+            const groups = [...new Set(allLinks.map(link => link.group).filter(Boolean))];
+            
+            let html = '<button class="category-btn active" data-group="all">全部</button>';
+            groups.forEach(group => {
+                const isActive = group === currentGroup ? 'active' : '';
+                html += `<button class="category-btn ${isActive}" data-group="${group}">${group}</button>`;
+            });
+            nav.innerHTML = html;
+
+            nav.querySelectorAll('.category-btn').forEach(btn => {
+                btn.addEventListener('click', () => {
+                    document.querySelectorAll('.category-btn').forEach(b => b.classList.remove('active'));
+                    btn.classList.add('active');
+                    currentGroup = btn.dataset.group;
+                    renderLinks();
+                });
+            });
+        }
+
+        function renderLinks() {
+            const container = document.getElementById('linksGrid');
+            const filteredLinks = currentGroup === 'all' 
+                ? allLinks 
+                : allLinks.filter(link => link.group === currentGroup);
+
+            if (filteredLinks.length === 0) {
+                container.innerHTML = `
+                    <div class="empty-state">
+                        <p>📂 该分组暂无链接</p>
+                    </div>
+                `;
+                return;
+            }
+
+            container.innerHTML = filteredLinks.map(link => `
+                <a href="${link.url}" class="link-card" target="_blank">
+                    <div class="card-icon">${link.icon || '🌐'}</div>
+                    <div class="card-content">
+                        <h3>${link.title}</h3>
+                        ${link.group ? `<span class="card-group">${link.group}</span>` : ''}
+                    </div>
+                </a>
+            `).join('');
+        }
+
+        function loadAvatar() {
+            const token = localStorage.getItem(TOKEN_KEY);
+            if (token) {
+                fetch('https://api.github.com/user', {
+                    headers: {
+                        'Authorization': 'Bearer ' + token,
+                        'Accept': 'application/vnd.github+json'
+                    }
+                })
+                .then(res => res.json())
+                .then(data => {
+                    if (data.avatar_url) {
+                        document.getElementById('avatar').src = data.avatar_url;
+                    }
+                })
+                .catch(err => console.log('获取头像失败', err));
+            }
+        }
+
+        loadAvatar();
         loadLinks();
     </script>
 
     <style>
+        .header-top {
+            display: flex;
+            justify-content: flex-end;
+            margin-bottom: 15px;
+        }
+
+        .header-right {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .header-avatar {
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            border: 2px solid rgba(255, 255, 255, 0.2);
+        }
+
         .admin-link {
-            display: inline-block;
-            margin-top: 15px;
-            padding: 8px 20px;
+            padding: 8px 16px;
             background: rgba(255, 255, 255, 0.1);
             border: 1px solid rgba(255, 255, 255, 0.2);
             border-radius: 20px;
             color: #888;
             text-decoration: none;
-            font-size: 0.9rem;
+            font-size: 0.85rem;
             transition: all 0.3s;
         }
 
         .admin-link:hover {
             background: rgba(255, 255, 255, 0.15);
             color: #fff;
+        }
+
+        .category-nav {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            margin-top: 15px;
+            padding: 12px;
+            background: rgba(255, 255, 255, 0.03);
+            border-radius: 12px;
+        }
+
+        .category-btn {
+            padding: 6px 16px;
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 16px;
+            color: #888;
+            cursor: pointer;
+            font-size: 0.85rem;
+            transition: all 0.3s;
+        }
+
+        .category-btn:hover {
+            background: rgba(255, 255, 255, 0.1);
+            color: #fff;
+        }
+
+        .category-btn.active {
+            background: linear-gradient(90deg, #00d9ff, #00ff88);
+            color: #1a1a2e;
+            border-color: transparent;
+        }
+
+        .card-group {
+            display: inline-block;
+            font-size: 0.75rem;
+            color: #00d9ff;
+            background: rgba(0, 217, 255, 0.1);
+            padding: 2px 8px;
+            border-radius: 10px;
+            margin-top: 4px;
         }
 
         .loading {
@@ -141,18 +259,19 @@
             margin-top: 10px;
         }
 
-        .deploy-info {
-            margin-top: 15px;
-            font-size: 0.85rem;
+        footer {
+            text-align: center;
+            padding: 30px 0;
             color: #666;
+            font-size: 0.85rem;
         }
 
-        .deploy-info a {
+        footer a {
             color: #00d9ff;
             text-decoration: none;
         }
 
-        .deploy-info a:hover {
+        footer a:hover {
             text-decoration: underline;
         }
     </style>
