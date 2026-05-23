@@ -2,6 +2,15 @@ const GIST_ID = 'd12a422a770678dcbb46b8f8050ad2c6';
 const TOKEN_KEY = 'github_token';
 let allLinks = [];
 let currentGroup = 'all';
+let searchKeyword = '';
+
+function initSearch() {
+    const searchInput = document.getElementById('searchInput');
+    searchInput.addEventListener('input', (e) => {
+        searchKeyword = e.target.value.trim().toLowerCase();
+        renderLinks();
+    });
+}
 
 async function loadLinks() {
     const container = document.getElementById('linksGrid');
@@ -61,14 +70,22 @@ function renderCategories() {
 
 function renderLinks() {
     const container = document.getElementById('linksGrid');
-    const filteredLinks = currentGroup === 'all'
+    let filteredLinks = currentGroup === 'all'
         ? allLinks
         : allLinks.filter(link => link.group === currentGroup);
+
+    if (searchKeyword) {
+        filteredLinks = filteredLinks.filter(link =>
+            link.title.toLowerCase().includes(searchKeyword) ||
+            link.url.toLowerCase().includes(searchKeyword) ||
+            (link.group && link.group.toLowerCase().includes(searchKeyword))
+        );
+    }
 
     if (filteredLinks.length === 0) {
         container.innerHTML = `
             <div class="empty-state">
-                <p>📂 该分组暂无链接</p>
+                <p>📂 ${searchKeyword ? '未找到匹配的链接' : '该分组暂无链接'}</p>
             </div>
         `;
         return;
@@ -104,3 +121,4 @@ function loadAvatar() {
 }
 
 loadLinks();
+initSearch();

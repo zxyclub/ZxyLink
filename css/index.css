@@ -33,6 +33,32 @@
     color: #fff;
 }
 
+.search-box {
+    margin: 15px 0;
+}
+
+.search-box input {
+    width: 100%;
+    max-width: 400px;
+    padding: 12px 16px;
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 24px;
+    color: #fff;
+    font-size: 0.95rem;
+    transition: all 0.3s;
+}
+
+.search-box input:focus {
+    outline: none;
+    border-color: #00d9ff;
+    background: rgba(255, 255, 255, 0.08);
+}
+
+.search-box input::placeholder {
+    color: #666;
+}
+
 .category-nav {
     display: flex;
     flex-wrap: wrap;
