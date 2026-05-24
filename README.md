@@ -1,121 +1,55 @@
-# ZxyLink - 私人导航页
+# 免责声明
 
-基于 GitHub Gist 的私人导航页，无数据库，轻量易部署。
+> **重要提示**：本项目为个人学习自用项目，代码仓库和 Gist ID 均为作者个人所有，不对他人开放使用。他人 Fork 或引用本项目将无法正常使用。
+>
+> 项目结构说明请查看：README-Detail.md
 
-## 特性
+## 项目性质
 
-- 使用 GitHub Gist 存储链接数据，无需服务器
-- 支持公开链接和私密链接分离
-- 分类导航 + 精准搜索
-- 一键导出链接数据
-- 移动端适配
-- 支持 GitHub Pages、Vercel、Cloudflare 等静态部署
+- **自用项目**：本项目仅供作者个人学习、搭建私人导航页使用
+- **闭源改进**：如需 Fork 或借鉴，请注明来源，但作者不对任何衍生作品负责
+- **免费服务**：本项目依赖的所有平台（GitHub、Vercel、Cloudflare、帽子云）均为免费服务
 
-## 页面
+## 技术依赖
 
-| 页面 | 说明 |
-|------|------|
-| [index.html](index.html) | 主页，展示所有公开链接 |
-| [admin.html](admin.html) | 管理后台，配置 Token，添加/编辑/删除链接 |
-| [private.html](private.html) | 私密页面，输入 Token 查看私密链接 |
+| 服务 | 平台方 | 用途 | 费用 |
+|------|--------|------|------|
+| GitHub | GitHub, Inc. | 代码托管、Gist 数据存储 | 免费 |
+| GitHub Pages | GitHub, Inc. | 静态网站托管 | 免费 |
+| Vercel | Vercel, Inc. | 静态网站托管 | 免费 |
+| Cloudflare | Cloudflare, Inc. | CDN 加速、DNS 解析 | 免费 |
+| 帽子云 | 帽子云 | 静态网站托管 | 免费 |
 
-## 快速开始
+## 知识产权声明
 
-### 1. 配置公开链接
+1. **本项目代码**：作者保留本项目代码的所有权利，如需引用或借鉴请标注来源。
 
-编辑 `zxylinks.json` 文件，或在管理后台添加链接：
+2. **第三方代码/服务**：
+   - 本项目使用的所有技术（HTML、CSS、JavaScript）均为通用开源标准技术
+   - 依赖的第三方服务（GitHub、Vercel、Cloudflare 等）均为各自公司商标，使用其服务不代表本项目与其有任何关联
 
-```json
-[
-  {
-    "icon": "📧",
-    "title": "Gmail",
-    "url": "https://gmail.com",
-    "group": "邮箱"
-  },
-  {
-    "icon": "🌐",
-    "title": "百度",
-    "url": "https://baidu.com",
-    "group": "搜索"
-  }
-]
-```
+3. **避免侵权注意事项**：
+   - 请勿在链接数据中存储他人受版权保护的内容
+   - 请勿使用本项目从事任何违法活动
+   - 链接内容由用户自行添加，作者不对链接内容的合法性负责
 
-**链接字段说明：**
+## 隐私与安全
 
-| 字段 | 说明 | 必填 |
-|------|------|------|
-| icon | 表情图标，默认 🌐 | 否 |
-| title | 网站名称 | 是 |
-| url | 网址（建议带 https://） | 是 |
-| group | 分组名称 | 否 |
+1. **数据存储**：
+   - 链接数据存储在作者的私人 GitHub Gist 中
+   - GitHub Token 仅存储在本地浏览器 localStorage，不会上传至任何第三方
 
-### 2. 部署
+2. **安全建议**：
+   - 定期检查 GitHub 已授权的应用列表
+   - 及时撤销不再使用的 Personal Access Token
+   - 不要在导航页中存储敏感个人信息（密码、银行卡号等）
 
-**GitHub Pages：**
-1. 推送文件到 GitHub 仓库
-2. 进入 Settings → Pages
-3. 选择 branch 和目录
-4. 访问 `{username}.github.io/{repo}`
+## 风险提示
 
-**Vercel / Cloudflare：**
-直接导入仓库即可。
+1. 第三方服务可能出现临时不可用，本项目不对此负责
+2. 本项目不提供任何明示或暗示的保证
+3. 用户需自行承担使用本项目的所有风险
 
-## 私密链接
+---
 
-1. 打开私密页面 [private.html](private.html)
-2. 输入 GitHub Personal Access Token
-3. 系统自动查找包含 `zxylink-private.json` 的私密 Gist
-4. 如果不存在，管理后台会自动创建一个
-
-### Token 权限
-
-仅需勾选 `gist` 权限即可。
-
-| 操作 | 需要 Token |
-|------|-----------|
-| 读取公开链接 | 否 |
-| 写入公开链接 | 是 |
-| 读取私密链接 | 是 |
-| 创建私密 Gist | 是 |
-
-## 文件结构
-
-```
-ZxyLink/
-├── index.html          # 主页
-├── admin.html          # 管理后台
-├── private.html        # 私密页面
-├── zxylinks.json       # 公开链接数据
-│
-├── css/
-│   ├── style.css       # 全局样式
-│   ├── index.css       # 主页样式
-│   ├── admin.css       # 管理后台样式
-│   └── private.css      # 私密页面样式
-│
-├── js/
-│   ├── index.js        # 主页逻辑
-│   ├── admin.js        # 管理后台逻辑
-│   └── private.js       # 私密页面逻辑
-│
-└── img/
-    └── avatar1.jpg     # 头像图片
-```
-
-## 自定义
-
-| 修改内容 | 文件 |
-|----------|------|
-| 全局样式 | css/style.css |
-| 主页样式 | css/index.css |
-| 管理后台样式 | css/admin.css |
-| 私密页面样式 | css/private.css |
-| 页面结构 | index.html / admin.html / private.html |
-
-## 注意
-
-- Token 仅存储在本地浏览器，不会上传到任何服务器
-- 公开 Gist ID 为固定值 `d12a422a770678dcbb46b8f8050ad2c6`
-- 请妥善保管 Token，不要泄露
+*最后更新：2026年5月*
