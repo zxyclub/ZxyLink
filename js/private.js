@@ -22,7 +22,8 @@ function renderCategories(links) {
     const nav = document.getElementById('privateCategoryNav');
     const groups = [...new Set(links.map(link => link.group).filter(Boolean))];
 
-    let html = '<button class="category-btn active" data-group="all">全部</button>';
+    const isAllActive = currentPrivateGroup === 'all' ? 'active' : '';
+    let html = `<button class="category-btn ${isAllActive}" data-group="all">全部</button>`;
     groups.forEach(group => {
         const isActive = group === currentPrivateGroup ? 'active' : '';
         html += `<button class="category-btn ${isActive}" data-group="${group}">${group}</button>`;

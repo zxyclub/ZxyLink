@@ -60,7 +60,8 @@ function renderCategories() {
     const nav = document.getElementById('categoryNav');
     const groups = [...new Set(allLinks.map(link => link.group).filter(Boolean))];
 
-    let html = '<button class="category-btn active" data-group="all">全部</button>';
+    const isAllActive = currentGroup === 'all' ? 'active' : '';
+    let html = `<button class="category-btn ${isAllActive}" data-group="all">全部</button>`;
     groups.forEach(group => {
         const isActive = group === currentGroup ? 'active' : '';
         html += `<button class="category-btn ${isActive}" data-group="${group}">${group}</button>`;

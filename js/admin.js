@@ -117,7 +117,8 @@ function renderPublicCategories() {
     const nav = document.getElementById('publicCategoryNav');
     const groups = [...new Set(publicLinks.map(link => link.group).filter(Boolean))];
 
-    let html = '<button class="category-btn active" data-group="all">全部</button>';
+    const isAllActive = publicCurrentGroup === 'all' ? 'active' : '';
+    let html = `<button class="category-btn ${isAllActive}" data-group="all">全部</button>`;
     groups.forEach(group => {
         const isActive = group === publicCurrentGroup ? 'active' : '';
         html += `<button class="category-btn ${isActive}" data-group="${group}">${group}</button>`;
@@ -138,7 +139,8 @@ function renderPrivateCategories() {
     const nav = document.getElementById('privateCategoryNav');
     const groups = [...new Set(privateLinks.map(link => link.group).filter(Boolean))];
 
-    let html = '<button class="category-btn active" data-group="all">全部</button>';
+    const isAllActive = privateCurrentGroup === 'all' ? 'active' : '';
+    let html = `<button class="category-btn ${isAllActive}" data-group="all">全部</button>`;
     groups.forEach(group => {
         const isActive = group === privateCurrentGroup ? 'active' : '';
         html += `<button class="category-btn ${isActive}" data-group="${group}">${group}</button>`;
