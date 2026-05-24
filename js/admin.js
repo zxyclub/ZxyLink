@@ -13,6 +13,17 @@ let publicSearchKeyword = '';
 let privateSearchKeyword = '';
 let publicCurrentPage = 1;
 let privateCurrentPage = 1;
+let groupCurrentType = 'public';
+let publicSelectedIndices = [];
+let privateSelectedIndices = [];
+let publicReorderMode = false;
+let privateReorderMode = false;
+let publicTempLinks = [];
+let privateTempLinks = [];
+let publicReorderGroup = 'all'; // 记录排序时的分组
+let privateReorderGroup = 'all';
+let groupReorderMode = false;
+let tempGroups = [];
 const PAGE_SIZE = 20;
 
 function showToast(msg, isError = false) {
@@ -107,35 +118,109 @@ function switchTab(tab) {
 
 function renderGroupManagement() {
     const container = document.getElementById('groupManagementList');
-    const publicGroups = [...new Set(publicLinks.map(link => link.group).filter(Boolean))];
-    const privateGroups = [...new Set(privateLinks.map(link => link.group).filter(Boolean))];
-    const allGroups = [...new Set([...publicGroups, ...privateGroups])];
+    let links, groups;
+    
+    if (groupCurrentType === 'public') {
+        links = publicLinks;
+        if (groupReorderMode) {
+            groups = tempGroups;
+        } else {
+            groups = [...new Set(publicLinks.map(link => link.group).filter(Boolean))];
+        }
+    } else {
+        links = privateLinks;
+        if (groupReorderMode) {
+            groups = tempGroups;
+        } else {
+            groups = [...new Set(privateLinks.map(link => link.group).filter(Boolean))];
+        }
+    }
 
-    if (allGroups.length === 0) {
+    // 显示/隐藏控件
+    const batchActions = document.getElementById('groupBatchActions');
+    const reorderControls = document.getElementById('groupReorderControls');
+    const reorderBtn = document.getElementById('groupReorderBtn');
+    const groupNavSection = document.getElementById('groupNavSection');
+    
+    if (groupReorderMode) {
+        batchActions.style.display = 'none';
+        reorderControls.style.display = 'flex';
+        reorderBtn.textContent = '退出排序';
+        reorderBtn.style.background = 'rgba(255, 107, 107, 0.2)';
+        reorderBtn.style.color = '#ff6b6b';
+        groupNavSection.style.display = 'none';
+    } else {
+        batchActions.style.display = 'flex';
+        reorderControls.style.display = 'none';
+        reorderBtn.textContent = '调整分组顺序';
+        reorderBtn.style.background = 'rgba(0, 217, 255, 0.2)';
+        reorderBtn.style.color = '#00d9ff';
+        groupNavSection.style.display = 'block';
+    }
+
+    if (groups.length === 0) {
         container.innerHTML = '<p class="empty-msg">暂无分组</p>';
         return;
     }
 
-    container.innerHTML = allGroups.map((group, idx) => {
-        const publicCount = publicLinks.filter(link => link.group === group).length;
-        const privateCount = privateLinks.filter(link => link.group === group).length;
-        const safeIdx = 'group_' + idx;
-        return `
-            <div class="group-item" data-group="${group}" data-safe-idx="${safeIdx}">
-                <div class="group-info">
-                    <span class="group-name">${group}</span>
-                    <span class="group-count">
-                        ${publicCount > 0 ? `${publicCount} 个公开链接` : ''}
-                        ${publicCount > 0 && privateCount > 0 ? ' · ' : ''}
-                        ${privateCount > 0 ? `${privateCount} 个私密链接` : ''}
-                    </span>
+    if (groupReorderMode) {
+        container.innerHTML = `<p class="reorder-hint">拖动或用上下按钮调整分组顺序后点击保存</p>`;
+        container.innerHTML += groups.map((group, idx) => {
+            const count = links.filter(link => link.group === group).length;
+            const safeIdx = 'group_' + idx;
+            return `
+                <div class="group-item draggable" 
+                     data-group="${group}" 
+                     data-safe-idx="${safeIdx}"
+                     draggable="true"
+                     ondragstart="handleGroupDragStart(event, ${idx})"
+                     ondragend="handleGroupDragEnd(event)"
+                     ondragover="handleDragOver(event)"
+                     ondragenter="handleDragEnter(event)"
+                     ondragleave="handleDragLeave(event)"
+                     ondrop="handleGroupDrop(event, ${idx})">
+                    <div class="drag-handle">
+                        <button class="order-btn" onclick="moveGroupUp(${idx})" ${idx === 0 ? 'disabled' : ''}>↑</button>
+                        <button class="order-btn" onclick="moveGroupDown(${idx})" ${idx === groups.length - 1 ? 'disabled' : ''}>↓</button>
+                    </div>
+                    <div class="group-info">
+                        <span class="group-name">${group}</span>
+                        <span class="group-count">${count} 个链接</span>
+                    </div>
                 </div>
-                <div class="group-actions">
-                    <button class="btn-edit" onclick="editGroupName('${safeIdx}', '${group}')">修改</button>
+            `;
+        }).join('');
+    } else {
+        container.innerHTML = groups.map((group, idx) => {
+            const count = links.filter(link => link.group === group).length;
+            const safeIdx = 'group_' + idx;
+            return `
+                <div class="group-item" data-group="${group}" data-safe-idx="${safeIdx}">
+                    <div class="group-info">
+                        <span class="group-name">${group}</span>
+                        <span class="group-count">${count} 个链接</span>
+                    </div>
+                    <div class="group-actions">
+                        <button class="btn-edit" onclick="editGroupName('${safeIdx}', '${group}')">修改</button>
+                    </div>
                 </div>
-            </div>
-        `;
-    }).join('');
+            `;
+        }).join('');
+    }
+
+    // 绑定分组管理导航
+    const nav = document.getElementById('groupsCategoryNav');
+    nav.querySelectorAll('.category-btn').forEach(btn => {
+        btn.removeEventListener('click', handleGroupNavClick);
+        btn.addEventListener('click', handleGroupNavClick);
+    });
+}
+
+function handleGroupNavClick(e) {
+    document.querySelectorAll('#groupsCategoryNav .category-btn').forEach(b => b.classList.remove('active'));
+    e.target.classList.add('active');
+    groupCurrentType = e.target.dataset.groupType;
+    renderGroupManagement();
 }
 
 window.editGroupName = function(safeIdx, oldGroupName) {
@@ -168,30 +253,28 @@ window.saveGroupName = async function(safeIdx, oldGroupName) {
         return;
     }
 
-    // 更新公开链接
-    let hasPublicChanges = false;
-    publicLinks.forEach(link => {
-        if (link.group === oldGroupName) {
-            link.group = newGroupName;
-            hasPublicChanges = true;
+    // 更新对应类型的链接
+    let hasChanges = false;
+    if (groupCurrentType === 'public') {
+        publicLinks.forEach(link => {
+            if (link.group === oldGroupName) {
+                link.group = newGroupName;
+                hasChanges = true;
+            }
+        });
+        if (hasChanges) {
+            await savePublicLinks();
         }
-    });
-
-    // 更新私密链接
-    let hasPrivateChanges = false;
-    privateLinks.forEach(link => {
-        if (link.group === oldGroupName) {
-            link.group = newGroupName;
-            hasPrivateChanges = true;
+    } else {
+        privateLinks.forEach(link => {
+            if (link.group === oldGroupName) {
+                link.group = newGroupName;
+                hasChanges = true;
+            }
+        });
+        if (hasChanges) {
+            await savePrivateLinks();
         }
-    });
-
-    // 保存到 Gist
-    if (hasPublicChanges) {
-        await savePublicLinks();
-    }
-    if (hasPrivateChanges) {
-        await savePrivateLinks();
     }
 
     renderPublicCategories();
@@ -457,23 +540,62 @@ function renderPublicLinks() {
     const container = document.getElementById('linksList');
     const hasToken = getToken();
 
+    // 先初始化 filteredLinks
     let filteredLinks;
-    if (publicCurrentGroup === 'all') {
-        filteredLinks = publicLinks;
-    } else if (publicCurrentGroup === 'ungrouped') {
-        filteredLinks = publicLinks.filter(link => !link.group);
+    if (publicReorderMode) {
+        filteredLinks = publicTempLinks;
     } else {
-        filteredLinks = publicLinks.filter(link => link.group === publicCurrentGroup);
+        if (publicCurrentGroup === 'all') {
+            filteredLinks = publicLinks;
+        } else if (publicCurrentGroup === 'ungrouped') {
+            filteredLinks = publicLinks.filter(link => !link.group);
+        } else {
+            filteredLinks = publicLinks.filter(link => link.group === publicCurrentGroup);
+        }
+
+        if (publicSearchKeyword) {
+            filteredLinks = filteredLinks.filter(link =>
+                link.title.toLowerCase().includes(publicSearchKeyword)
+            );
+        }
     }
 
-    if (publicSearchKeyword) {
-        filteredLinks = filteredLinks.filter(link =>
-            link.title.toLowerCase().includes(publicSearchKeyword)
-        );
+    // 再显示/隐藏排序控件和按钮
+    const batchActions = document.getElementById('publicBatchActions');
+    const reorderControls = document.getElementById('publicReorderControls');
+    const pagination = document.getElementById('publicPagination');
+    const reorderBtn = document.getElementById('publicReorderBtn');
+    const publicSearchBox = document.querySelector('#publicSection .search-box');
+    const publicCategoryNav = document.getElementById('publicCategoryNav');
+    const editSection = document.getElementById('editSection');
+
+    if (publicReorderMode) {
+        batchActions.style.display = 'none';
+        reorderControls.style.display = 'flex';
+        pagination.style.display = 'none';
+        publicSearchBox.style.display = 'none';
+        publicCategoryNav.style.display = 'none';
+        editSection.style.display = 'none';
+        reorderBtn.textContent = '退出排序';
+        reorderBtn.style.background = 'rgba(255, 107, 107, 0.2)';
+        reorderBtn.style.color = '#ff6b6b';
+    } else {
+        batchActions.style.display = hasToken && filteredLinks.length > 0 ? 'flex' : 'none';
+        reorderControls.style.display = 'none';
+        pagination.style.display = filteredLinks.length > 0 ? 'block' : 'none';
+        publicSearchBox.style.display = 'flex';
+        publicCategoryNav.style.display = 'flex';
+        if (hasToken) {
+            editSection.classList.remove('hidden');
+            editSection.style.display = 'block';
+        }
+        reorderBtn.textContent = '调整顺序';
+        reorderBtn.style.background = 'rgba(0, 217, 255, 0.2)';
+        reorderBtn.style.color = '#00d9ff';
     }
 
     const totalPages = Math.max(1, Math.ceil(filteredLinks.length / PAGE_SIZE));
-    if (publicCurrentPage > totalPages) publicCurrentPage = totalPages;
+    if (publicCurrentPage > totalPages && !publicReorderMode) publicCurrentPage = totalPages;
 
     if (filteredLinks.length === 0) {
         container.innerHTML = publicCurrentGroup === 'all' && !publicSearchKeyword
@@ -484,38 +606,90 @@ function renderPublicLinks() {
         return;
     }
 
-    const startIdx = (publicCurrentPage - 1) * PAGE_SIZE;
-    const pageLinks = filteredLinks.slice(startIdx, startIdx + PAGE_SIZE);
+    let pageLinks;
+    if (publicReorderMode) {
+        pageLinks = filteredLinks; // 不分页，显示所有
+    } else {
+        const startIdx = (publicCurrentPage - 1) * PAGE_SIZE;
+        pageLinks = filteredLinks.slice(startIdx, startIdx + PAGE_SIZE);
+    }
 
-    container.innerHTML = pageLinks.map((link) => {
-        const originalIndex = publicLinks.indexOf(link);
-        return `
-            <div class="link-item" data-index="${originalIndex}">
-                <div class="icon-box">${link.icon}</div>
-                <div class="content-box">
-                    <div class="info-row">
-                        <div>
-                            <div class="title">${link.title}</div>
-                            <div class="group">${link.group || ''}</div>
-                        </div>
-                        ${hasToken ? `
-                        <div class="actions">
-                            <button class="btn-edit" onclick="editPublicLink(${originalIndex})">编辑</button>
-                            <button class="btn-delete" onclick="deletePublicLink(${originalIndex})">删除</button>
-                        </div>
-                        ` : ''}
+    if (publicReorderMode) {
+        const groupName = publicReorderGroup === 'all' ? '全部' : (publicReorderGroup === 'ungrouped' ? '未分组' : publicReorderGroup);
+        container.innerHTML = `<p class="reorder-hint">正在调整「${groupName}」分组下的链接顺序，拖动或用上下按钮调整后点击保存</p>`;
+        container.innerHTML += pageLinks.map((link, idx) => {
+            return `
+                <div class="link-item draggable" 
+                     draggable="true" 
+                     data-index="${idx}"
+                     ondragstart="handleDragStart(event, 'public', ${idx})"
+                     ondragend="handleDragEnd(event)"
+                     ondragover="handleDragOver(event)"
+                     ondragenter="handleDragEnter(event)"
+                     ondragleave="handleDragLeave(event)"
+                     ondrop="handleDrop(event, 'public', ${idx})">
+                    <div class="drag-handle">
+                        <button class="order-btn" onclick="moveUp('public', ${idx})" ${idx === 0 ? 'disabled' : ''}>↑</button>
+                        <button class="order-btn" onclick="moveDown('public', ${idx})" ${idx === pageLinks.length - 1 ? 'disabled' : ''}>↓</button>
                     </div>
-                    <div class="url-row">
-                        <span class="url">${link.url}</span>
+                    <div class="icon-box">${link.icon}</div>
+                    <div class="content-box">
+                        <div class="info-row">
+                            <div>
+                                <div class="title">${link.title}</div>
+                                <div class="group">${link.group || ''}</div>
+                            </div>
+                        </div>
+                        <div class="url-row">
+                            <span class="url">${link.url}</span>
+                        </div>
                     </div>
                 </div>
-            </div>
-        `;
-    }).join('');
+            `;
+        }).join('');
+    } else {
+        container.innerHTML = pageLinks.map((link) => {
+            const originalIndex = publicLinks.indexOf(link);
+            const isSelected = publicSelectedIndices.includes(originalIndex);
+            return `
+                <div class="link-item ${isSelected ? 'selected' : ''}" data-index="${originalIndex}">
+                    <div class="icon-box">${link.icon}</div>
+                    <div class="content-box">
+                        <div class="info-row">
+                            <div>
+                                <div class="title">${link.title}</div>
+                                <div class="group">${link.group || ''}</div>
+                            </div>
+                            ${hasToken ? `
+                            <div class="actions">
+                                <button class="btn-edit" onclick="editPublicLink(${originalIndex})">编辑</button>
+                                <button class="btn-delete" onclick="deletePublicLink(${originalIndex})">删除</button>
+                                <button class="btn-select ${isSelected ? 'selected' : ''}" onclick="toggleSelectItem('public', ${originalIndex})">
+                                    ${isSelected ? '✓' : ''}
+                                </button>
+                            </div>
+                            ` : ''}
+                        </div>
+                        <div class="url-row">
+                            <span class="url">${link.url}</span>
+                        </div>
+                    </div>
+                </div>
+            `;
+        }).join('');
+    }
 
-    renderPublicPagination(totalPages, filteredLinks.length);
+    if (!publicReorderMode) {
+        renderPublicPagination(totalPages, filteredLinks.length);
+    } else {
+        document.getElementById('publicPagination').innerHTML = '';
+    }
+    
     renderCategoryButtons(publicLinks, 'newGroup');
     renderPublicCategories();
+    if (!publicReorderMode) {
+        updateBatchUI('public');
+    }
 }
 
 function renderPublicPagination(totalPages, totalCount) {
@@ -548,23 +722,62 @@ function renderPrivateLinks() {
     const container = document.getElementById('privateLinksList');
     const hasToken = getToken();
 
+    // 先初始化 filteredLinks
     let filteredLinks;
-    if (privateCurrentGroup === 'all') {
-        filteredLinks = privateLinks;
-    } else if (privateCurrentGroup === 'ungrouped') {
-        filteredLinks = privateLinks.filter(link => !link.group);
+    if (privateReorderMode) {
+        filteredLinks = privateTempLinks;
     } else {
-        filteredLinks = privateLinks.filter(link => link.group === privateCurrentGroup);
+        if (privateCurrentGroup === 'all') {
+            filteredLinks = privateLinks;
+        } else if (privateCurrentGroup === 'ungrouped') {
+            filteredLinks = privateLinks.filter(link => !link.group);
+        } else {
+            filteredLinks = privateLinks.filter(link => link.group === privateCurrentGroup);
+        }
+
+        if (privateSearchKeyword) {
+            filteredLinks = filteredLinks.filter(link =>
+                link.title.toLowerCase().includes(privateSearchKeyword)
+            );
+        }
     }
 
-    if (privateSearchKeyword) {
-        filteredLinks = filteredLinks.filter(link =>
-            link.title.toLowerCase().includes(privateSearchKeyword)
-        );
+    // 再显示/隐藏排序控件和按钮
+    const batchActions = document.getElementById('privateBatchActions');
+    const reorderControls = document.getElementById('privateReorderControls');
+    const pagination = document.getElementById('privatePagination');
+    const reorderBtn = document.getElementById('privateReorderBtn');
+    const privateSearchBox = document.querySelector('#privateSection .search-box');
+    const privateCategoryNav = document.getElementById('privateCategoryNav');
+    const privateEditSection = document.getElementById('privateEditSection');
+
+    if (privateReorderMode) {
+        batchActions.style.display = 'none';
+        reorderControls.style.display = 'flex';
+        pagination.style.display = 'none';
+        privateSearchBox.style.display = 'none';
+        privateCategoryNav.style.display = 'none';
+        privateEditSection.style.display = 'none';
+        reorderBtn.textContent = '退出排序';
+        reorderBtn.style.background = 'rgba(255, 107, 107, 0.2)';
+        reorderBtn.style.color = '#ff6b6b';
+    } else {
+        batchActions.style.display = hasToken && filteredLinks.length > 0 ? 'flex' : 'none';
+        reorderControls.style.display = 'none';
+        pagination.style.display = filteredLinks.length > 0 ? 'block' : 'none';
+        privateSearchBox.style.display = 'flex';
+        privateCategoryNav.style.display = 'flex';
+        if (hasToken) {
+            privateEditSection.classList.remove('hidden');
+            privateEditSection.style.display = 'block';
+        }
+        reorderBtn.textContent = '调整顺序';
+        reorderBtn.style.background = 'rgba(0, 217, 255, 0.2)';
+        reorderBtn.style.color = '#00d9ff';
     }
 
     const totalPages = Math.max(1, Math.ceil(filteredLinks.length / PAGE_SIZE));
-    if (privateCurrentPage > totalPages) privateCurrentPage = totalPages;
+    if (privateCurrentPage > totalPages && !privateReorderMode) privateCurrentPage = totalPages;
 
     if (filteredLinks.length === 0) {
         container.innerHTML = privateCurrentGroup === 'all' && !privateSearchKeyword
@@ -575,38 +788,90 @@ function renderPrivateLinks() {
         return;
     }
 
-    const startIdx = (privateCurrentPage - 1) * PAGE_SIZE;
-    const pageLinks = filteredLinks.slice(startIdx, startIdx + PAGE_SIZE);
+    let pageLinks;
+    if (privateReorderMode) {
+        pageLinks = filteredLinks; // 不分页，显示所有
+    } else {
+        const startIdx = (privateCurrentPage - 1) * PAGE_SIZE;
+        pageLinks = filteredLinks.slice(startIdx, startIdx + PAGE_SIZE);
+    }
 
-    container.innerHTML = pageLinks.map((link) => {
-        const originalIndex = privateLinks.indexOf(link);
-        return `
-            <div class="link-item" data-index="${originalIndex}">
-                <div class="icon-box">${link.icon}</div>
-                <div class="content-box">
-                    <div class="info-row">
-                        <div>
-                            <div class="title">${link.title}</div>
-                            <div class="group">${link.group || ''}</div>
-                        </div>
-                        ${hasToken ? `
-                        <div class="actions">
-                            <button class="btn-edit" onclick="editPrivateLink(${originalIndex})">编辑</button>
-                            <button class="btn-delete" onclick="deletePrivateLink(${originalIndex})">删除</button>
-                        </div>
-                        ` : ''}
+    if (privateReorderMode) {
+        const groupName = privateReorderGroup === 'all' ? '全部' : (privateReorderGroup === 'ungrouped' ? '未分组' : privateReorderGroup);
+        container.innerHTML = `<p class="reorder-hint">正在调整「${groupName}」分组下的链接顺序，拖动或用上下按钮调整后点击保存</p>`;
+        container.innerHTML += pageLinks.map((link, idx) => {
+            return `
+                <div class="link-item draggable" 
+                     draggable="true" 
+                     data-index="${idx}"
+                     ondragstart="handleDragStart(event, 'private', ${idx})"
+                     ondragend="handleDragEnd(event)"
+                     ondragover="handleDragOver(event)"
+                     ondragenter="handleDragEnter(event)"
+                     ondragleave="handleDragLeave(event)"
+                     ondrop="handleDrop(event, 'private', ${idx})">
+                    <div class="drag-handle">
+                        <button class="order-btn" onclick="moveUp('private', ${idx})" ${idx === 0 ? 'disabled' : ''}>↑</button>
+                        <button class="order-btn" onclick="moveDown('private', ${idx})" ${idx === pageLinks.length - 1 ? 'disabled' : ''}>↓</button>
                     </div>
-                    <div class="url-row">
-                        <span class="url">${link.url}</span>
+                    <div class="icon-box">${link.icon}</div>
+                    <div class="content-box">
+                        <div class="info-row">
+                            <div>
+                                <div class="title">${link.title}</div>
+                                <div class="group">${link.group || ''}</div>
+                            </div>
+                        </div>
+                        <div class="url-row">
+                            <span class="url">${link.url}</span>
+                        </div>
                     </div>
                 </div>
-            </div>
-        `;
-    }).join('');
+            `;
+        }).join('');
+    } else {
+        container.innerHTML = pageLinks.map((link) => {
+            const originalIndex = privateLinks.indexOf(link);
+            const isSelected = privateSelectedIndices.includes(originalIndex);
+            return `
+                <div class="link-item ${isSelected ? 'selected' : ''}" data-index="${originalIndex}">
+                    <div class="icon-box">${link.icon}</div>
+                    <div class="content-box">
+                        <div class="info-row">
+                            <div>
+                                <div class="title">${link.title}</div>
+                                <div class="group">${link.group || ''}</div>
+                            </div>
+                            ${hasToken ? `
+                            <div class="actions">
+                                <button class="btn-edit" onclick="editPrivateLink(${originalIndex})">编辑</button>
+                                <button class="btn-delete" onclick="deletePrivateLink(${originalIndex})">删除</button>
+                                <button class="btn-select ${isSelected ? 'selected' : ''}" onclick="toggleSelectItem('private', ${originalIndex})">
+                                    ${isSelected ? '✓' : ''}
+                                </button>
+                            </div>
+                            ` : ''}
+                        </div>
+                        <div class="url-row">
+                            <span class="url">${link.url}</span>
+                        </div>
+                    </div>
+                </div>
+            `;
+        }).join('');
+    }
 
-    renderPrivatePagination(totalPages, filteredLinks.length);
+    if (!privateReorderMode) {
+        renderPrivatePagination(totalPages, filteredLinks.length);
+    } else {
+        document.getElementById('privatePagination').innerHTML = '';
+    }
+    
     renderCategoryButtons(privateLinks, 'newPrivateGroup');
     renderPrivateCategories();
+    if (!privateReorderMode) {
+        updateBatchUI('private');
+    }
 }
 
 function renderPrivatePagination(totalPages, totalCount) {
@@ -697,6 +962,10 @@ window.savePublicEdit = async function (index) {
 window.deletePublicLink = async function (index) {
     if (confirm('确定要删除这个链接吗？')) {
         publicLinks.splice(index, 1);
+        // 清理选中索引
+        publicSelectedIndices = publicSelectedIndices.filter(i => i !== index);
+        // 更新大于删除索引的选中索引
+        publicSelectedIndices = publicSelectedIndices.map(i => i > index ? i - 1 : i);
         await savePublicLinks();
         renderPublicLinks();
     }
@@ -755,6 +1024,10 @@ window.savePrivateEdit = async function (index) {
 window.deletePrivateLink = async function (index) {
     if (confirm('确定要删除这个链接吗？')) {
         privateLinks.splice(index, 1);
+        // 清理选中索引
+        privateSelectedIndices = privateSelectedIndices.filter(i => i !== index);
+        // 更新大于删除索引的选中索引
+        privateSelectedIndices = privateSelectedIndices.map(i => i > index ? i - 1 : i);
         await savePrivateLinks();
         renderPrivateLinks();
     }
@@ -944,3 +1217,426 @@ document.getElementById('privateImportModal').addEventListener('click', (e) => {
         closePrivateImportModal();
     }
 });
+
+// 批量删除功能
+window.toggleSelectItem = function(type, index) {
+    const selectedIndices = type === 'public' ? publicSelectedIndices : privateSelectedIndices;
+    const idx = selectedIndices.indexOf(index);
+    if (idx > -1) {
+        selectedIndices.splice(idx, 1);
+    } else {
+        selectedIndices.push(index);
+    }
+    renderPublicLinks();
+    renderPrivateLinks();
+};
+
+window.toggleSelectAll = function(type) {
+    const checkAllId = type === 'public' ? 'publicSelectAll' : 'privateSelectAll';
+    const checkAll = document.getElementById(checkAllId);
+    const links = type === 'public' ? publicLinks : privateLinks;
+    const selectedIndices = type === 'public' ? publicSelectedIndices : privateSelectedIndices;
+    
+    if (checkAll.checked) {
+        let filteredLinks;
+        if (type === 'public') {
+            filteredLinks = publicCurrentGroup === 'all' ? publicLinks
+                : publicCurrentGroup === 'ungrouped' ? publicLinks.filter(link => !link.group)
+                : publicLinks.filter(link => link.group === publicCurrentGroup);
+            if (publicSearchKeyword) {
+                filteredLinks = filteredLinks.filter(link =>
+                    link.title.toLowerCase().includes(publicSearchKeyword)
+                );
+            }
+        } else {
+            filteredLinks = privateCurrentGroup === 'all' ? privateLinks
+                : privateCurrentGroup === 'ungrouped' ? privateLinks.filter(link => !link.group)
+                : privateLinks.filter(link => link.group === privateCurrentGroup);
+            if (privateSearchKeyword) {
+                filteredLinks = filteredLinks.filter(link =>
+                    link.title.toLowerCase().includes(privateSearchKeyword)
+                );
+            }
+        }
+        
+        selectedIndices.length = 0;
+        filteredLinks.forEach(link => {
+            const idx = links.indexOf(link);
+            selectedIndices.push(idx);
+        });
+    } else {
+        selectedIndices.length = 0;
+    }
+    renderPublicLinks();
+    renderPrivateLinks();
+};
+
+function updateBatchUI(type) {
+    const selectedCountId = type === 'public' ? 'publicSelectedCount' : 'privateSelectedCount';
+    const selectAllId = type === 'public' ? 'publicSelectAll' : 'privateSelectAll';
+    const links = type === 'public' ? publicLinks : privateLinks;
+    const selectedIndices = type === 'public' ? publicSelectedIndices : privateSelectedIndices;
+    
+    document.getElementById(selectedCountId).textContent = selectedIndices.length;
+    
+    let filteredLinks;
+    if (type === 'public') {
+        filteredLinks = publicCurrentGroup === 'all' ? publicLinks
+            : publicCurrentGroup === 'ungrouped' ? publicLinks.filter(link => !link.group)
+            : publicLinks.filter(link => link.group === publicCurrentGroup);
+        if (publicSearchKeyword) {
+            filteredLinks = filteredLinks.filter(link =>
+                link.title.toLowerCase().includes(publicSearchKeyword)
+            );
+        }
+    } else {
+        filteredLinks = privateCurrentGroup === 'all' ? privateLinks
+            : privateCurrentGroup === 'ungrouped' ? privateLinks.filter(link => !link.group)
+            : privateLinks.filter(link => link.group === privateCurrentGroup);
+        if (privateSearchKeyword) {
+            filteredLinks = filteredLinks.filter(link =>
+                link.title.toLowerCase().includes(privateSearchKeyword)
+            );
+        }
+    }
+    
+    const allSelected = filteredLinks.length > 0 && filteredLinks.every(link => 
+        selectedIndices.includes(links.indexOf(link))
+    );
+    document.getElementById(selectAllId).checked = allSelected;
+}
+
+window.batchDelete = async function(type) {
+    const selectedIndices = type === 'public' ? publicSelectedIndices : privateSelectedIndices;
+    const links = type === 'public' ? publicLinks : privateLinks;
+    
+    if (selectedIndices.length === 0) {
+        showToast('请先选择要删除的链接', true);
+        return;
+    }
+    
+    if (!confirm(`确定要删除选中的 ${selectedIndices.length} 个链接吗？`)) {
+        return;
+    }
+    
+    // 从大到小排序，避免索引偏移
+    const sortedIndices = [...selectedIndices].sort((a, b) => b - a);
+    sortedIndices.forEach(idx => {
+        links.splice(idx, 1);
+    });
+    
+    if (type === 'public') {
+        await savePublicLinks();
+        publicSelectedIndices.length = 0;
+    } else {
+        await savePrivateLinks();
+        privateSelectedIndices.length = 0;
+    }
+    
+    showToast(`成功删除 ${sortedIndices.length} 个链接`);
+    renderPublicLinks();
+    renderPrivateLinks();
+};
+
+// 上下移动链接
+window.moveUp = function(type, index) {
+    const tempLinks = type === 'public' ? publicTempLinks : privateTempLinks;
+    if (index <= 0) return;
+    
+    const temp = tempLinks[index];
+    tempLinks[index] = tempLinks[index - 1];
+    tempLinks[index - 1] = temp;
+    
+    if (type === 'public') {
+        renderPublicLinks();
+    } else {
+        renderPrivateLinks();
+    }
+};
+
+window.moveDown = function(type, index) {
+    const tempLinks = type === 'public' ? publicTempLinks : privateTempLinks;
+    if (index >= tempLinks.length - 1) return;
+    
+    const temp = tempLinks[index];
+    tempLinks[index] = tempLinks[index + 1];
+    tempLinks[index + 1] = temp;
+    
+    if (type === 'public') {
+        renderPublicLinks();
+    } else {
+        renderPrivateLinks();
+    }
+};
+
+// 分组排序相关变量
+let draggedGroupIndex = null;
+
+// 分组排序功能
+window.toggleGroupReorderMode = function() {
+    groupReorderMode = !groupReorderMode;
+    if (groupReorderMode) {
+        if (groupCurrentType === 'public') {
+            tempGroups = [...new Set(publicLinks.map(link => link.group).filter(Boolean))];
+        } else {
+            tempGroups = [...new Set(privateLinks.map(link => link.group).filter(Boolean))];
+        }
+    } else {
+        tempGroups.length = 0;
+    }
+    renderGroupManagement();
+};
+
+window.cancelGroupOrder = function() {
+    groupReorderMode = false;
+    tempGroups.length = 0;
+    renderGroupManagement();
+};
+
+window.saveGroupOrder = async function() {
+    if (groupCurrentType === 'public') {
+        // 按新的分组顺序重新排列链接
+        const newPublicLinks = [];
+        // 先按顺序添加有分组的链接
+        tempGroups.forEach(group => {
+            newPublicLinks.push(...publicLinks.filter(link => link.group === group));
+        });
+        // 再添加未分组的链接
+        newPublicLinks.push(...publicLinks.filter(link => !link.group));
+        publicLinks = newPublicLinks;
+        
+        await savePublicLinks();
+        renderGroupManagement();
+        renderPublicLinks();
+        renderPublicCategories();
+        showToast('分组顺序已保存');
+    } else {
+        // 私密链接
+        const newPrivateLinks = [];
+        tempGroups.forEach(group => {
+            newPrivateLinks.push(...privateLinks.filter(link => link.group === group));
+        });
+        newPrivateLinks.push(...privateLinks.filter(link => !link.group));
+        privateLinks = newPrivateLinks;
+        
+        await savePrivateLinks();
+        renderGroupManagement();
+        renderPrivateLinks();
+        renderPrivateCategories();
+        showToast('分组顺序已保存');
+    }
+    
+    groupReorderMode = false;
+    tempGroups.length = 0;
+};
+
+window.moveGroupUp = function(index) {
+    if (index <= 0) return;
+    
+    const temp = tempGroups[index];
+    tempGroups[index] = tempGroups[index - 1];
+    tempGroups[index - 1] = temp;
+    
+    renderGroupManagement();
+};
+
+window.moveGroupDown = function(index) {
+    if (index >= tempGroups.length - 1) return;
+    
+    const temp = tempGroups[index];
+    tempGroups[index] = tempGroups[index + 1];
+    tempGroups[index + 1] = temp;
+    
+    renderGroupManagement();
+};
+
+// 分组拖拽功能
+function handleGroupDragStart(e, index) {
+    draggedGroupIndex = index;
+    e.target.classList.add('dragging');
+    e.dataTransfer.effectAllowed = 'move';
+}
+
+function handleGroupDragEnd(e) {
+    e.target.classList.remove('dragging');
+    const items = document.querySelectorAll('.group-item.draggable');
+    items.forEach(item => item.classList.remove('drag-over'));
+    draggedGroupIndex = null;
+}
+
+function handleGroupDrop(e, targetIndex) {
+    e.preventDefault();
+    if (draggedGroupIndex === null || draggedGroupIndex === targetIndex) return;
+    
+    const temp = tempGroups[draggedGroupIndex];
+    tempGroups[draggedGroupIndex] = tempGroups[targetIndex];
+    tempGroups[targetIndex] = temp;
+    
+    renderGroupManagement();
+}
+
+// 调整顺序功能
+window.toggleReorderMode = function(type) {
+    if (type === 'public') {
+        publicReorderMode = !publicReorderMode;
+        publicReorderGroup = publicCurrentGroup;
+        if (publicReorderMode) {
+            // 只保存当前分组的链接
+            if (publicCurrentGroup === 'all') {
+                publicTempLinks = [...publicLinks];
+            } else if (publicCurrentGroup === 'ungrouped') {
+                publicTempLinks = publicLinks.filter(link => !link.group);
+            } else {
+                publicTempLinks = publicLinks.filter(link => link.group === publicCurrentGroup);
+            }
+        }
+        renderPublicLinks();
+    } else {
+        privateReorderMode = !privateReorderMode;
+        privateReorderGroup = privateCurrentGroup;
+        if (privateReorderMode) {
+            // 只保存当前分组的链接
+            if (privateCurrentGroup === 'all') {
+                privateTempLinks = [...privateLinks];
+            } else if (privateCurrentGroup === 'ungrouped') {
+                privateTempLinks = privateLinks.filter(link => !link.group);
+            } else {
+                privateTempLinks = privateLinks.filter(link => link.group === privateCurrentGroup);
+            }
+        }
+        renderPrivateLinks();
+    }
+};
+
+window.cancelReorder = function(type) {
+    if (type === 'public') {
+        publicReorderMode = false;
+        publicTempLinks.length = 0;
+        publicReorderGroup = 'all';
+        renderPublicLinks();
+    } else {
+        privateReorderMode = false;
+        privateTempLinks.length = 0;
+        privateReorderGroup = 'all';
+        renderPrivateLinks();
+    }
+};
+
+window.saveReorder = async function(type) {
+    if (type === 'public') {
+        // 重新构建公开链接数组
+        const newPublicLinks = [];
+        if (publicReorderGroup === 'all') {
+            // 如果是全部分组，直接替换
+            publicLinks = [...publicTempLinks];
+        } else if (publicReorderGroup === 'ungrouped') {
+            // 未分组，替换未分组的链接
+            publicLinks.forEach(link => {
+                if (link.group) {
+                    newPublicLinks.push(link);
+                }
+            });
+            // 添加排序后的未分组链接
+            newPublicLinks.push(...publicTempLinks);
+            publicLinks = newPublicLinks;
+        } else {
+            // 指定分组，替换该分组的链接
+            // 先添加其他分组的链接
+            publicLinks.forEach(link => {
+                if (link.group !== publicReorderGroup) {
+                    newPublicLinks.push(link);
+                }
+            });
+            // 再添加排序后的该分组链接
+            newPublicLinks.push(...publicTempLinks);
+            publicLinks = newPublicLinks;
+        }
+        
+        await savePublicLinks();
+        publicReorderMode = false;
+        publicTempLinks.length = 0;
+        publicReorderGroup = 'all';
+        renderPublicLinks();
+        showToast('顺序已保存');
+    } else {
+        // 重新构建私密链接数组
+        const newPrivateLinks = [];
+        if (privateReorderGroup === 'all') {
+            privateLinks = [...privateTempLinks];
+        } else if (privateReorderGroup === 'ungrouped') {
+            privateLinks.forEach(link => {
+                if (link.group) {
+                    newPrivateLinks.push(link);
+                }
+            });
+            newPrivateLinks.push(...privateTempLinks);
+            privateLinks = newPrivateLinks;
+        } else {
+            privateLinks.forEach(link => {
+                if (link.group !== privateReorderGroup) {
+                    newPrivateLinks.push(link);
+                }
+            });
+            newPrivateLinks.push(...privateTempLinks);
+            privateLinks = newPrivateLinks;
+        }
+        
+        await savePrivateLinks();
+        privateReorderMode = false;
+        privateTempLinks.length = 0;
+        privateReorderGroup = 'all';
+        renderPrivateLinks();
+        showToast('顺序已保存');
+    }
+};
+
+// 拖拽功能变量
+let draggedIndex = null;
+let dragType = null;
+
+function handleDragStart(e, type, idx) {
+    draggedIndex = idx;
+    dragType = type;
+    e.target.classList.add('dragging');
+    e.dataTransfer.effectAllowed = 'move';
+}
+
+function handleDragEnd(e) {
+    e.target.classList.remove('dragging');
+    const items = document.querySelectorAll('.link-item.draggable');
+    items.forEach(item => item.classList.remove('drag-over'));
+    draggedIndex = null;
+    dragType = null;
+}
+
+function handleDragOver(e) {
+    e.preventDefault();
+    e.dataTransfer.dropEffect = 'move';
+}
+
+function handleDragEnter(e) {
+    if (e.target.closest('.link-item.draggable')) {
+        e.target.closest('.link-item.draggable').classList.add('drag-over');
+    }
+}
+
+function handleDragLeave(e) {
+    if (e.target.closest('.link-item.draggable')) {
+        e.target.closest('.link-item.draggable').classList.remove('drag-over');
+    }
+}
+
+function handleDrop(e, type, targetIdx) {
+    e.preventDefault();
+    if (dragType !== type || draggedIndex === null || draggedIndex === targetIdx) return;
+
+    const tempLinks = type === 'public' ? publicTempLinks : privateTempLinks;
+    const [movedItem] = tempLinks.splice(draggedIndex, 1);
+    tempLinks.splice(targetIdx, 0, movedItem);
+    
+    if (type === 'public') {
+        renderPublicLinks();
+    } else {
+        renderPrivateLinks();
+    }
+}

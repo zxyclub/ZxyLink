@@ -53,7 +53,21 @@
                     </form>
                 </div>
                 <br>
-                <h2>📋 链接列表</h2>
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px;">
+                    <h2>📋 链接列表</h2>
+                    <div class="batch-actions" id="publicBatchActions" style="display: none;">
+                        <label class="batch-label">
+                            <input type="checkbox" id="publicSelectAll" onclick="toggleSelectAll('public')">
+                            全选
+                        </label>
+                        <button class="btn-delete" onclick="batchDelete('public')">删除选中 (<span id="publicSelectedCount">0</span>)</button>
+                        <button class="btn-edit" onclick="toggleReorderMode('public')" id="publicReorderBtn">调整顺序</button>
+                    </div>
+                    <div class="reorder-controls" id="publicReorderControls" style="display: none;">
+                        <button class="btn-edit" onclick="saveReorder('public')">保存顺序</button>
+                        <button class="btn-delete" onclick="cancelReorder('public')">取消</button>
+                    </div>
+                </div>
                 <div id="noTokenMsg" class="empty-msg hidden">请先配置 GitHub Token 以启用修改功能</div>
                 <div id="linksList" class="links-list"></div>
                 <div id="publicPagination" class="pagination"></div>
@@ -87,19 +101,46 @@
                         </div>
                     </form>
                 </div>
-
-                <h2>📋 私密链接列表</h2>
+                <br>
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px;">
+                    <h2>📋 私密链接列表</h2>
+                    <div class="batch-actions" id="privateBatchActions" style="display: none;">
+                        <label class="batch-label">
+                            <input type="checkbox" id="privateSelectAll" onclick="toggleSelectAll('private')">
+                            全选
+                        </label>
+                        <button class="btn-delete" onclick="batchDelete('private')">删除选中 (<span id="privateSelectedCount">0</span>)</button>
+                        <button class="btn-edit" onclick="toggleReorderMode('private')" id="privateReorderBtn">调整顺序</button>
+                    </div>
+                    <div class="reorder-controls" id="privateReorderControls" style="display: none;">
+                        <button class="btn-edit" onclick="saveReorder('private')">保存顺序</button>
+                        <button class="btn-delete" onclick="cancelReorder('private')">取消</button>
+                    </div>
+                </div>
                 <div id="privateNoTokenMsg" class="empty-msg hidden">请先配置 GitHub Token 以启用修改功能</div>
                 <div id="privateLinksList" class="links-list"></div>
                 <div id="privatePagination" class="pagination"></div>
             </div>
 
             <div id="groupsSection" class="hidden">
-                <h2>📁 分组管理</h2>
-                <div style="margin-bottom: 20px;">
-                    <p style="color: #888; margin-bottom: 16px;">修改分组名称会更新该分组下所有链接的分组信息</p>
-                    <div id="groupManagementList" class="groups-list"></div>
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px;">
+                    <h2>📁 分组管理</h2>
+                    <div class="batch-actions" id="groupBatchActions" style="display: none;">
+                        <button class="btn-edit" onclick="toggleGroupReorderMode()" id="groupReorderBtn">调整分组顺序</button>
+                    </div>
+                    <div id="groupReorderControls" style="display: none;">
+                        <button class="btn-edit" onclick="saveGroupOrder()">保存分组顺序</button>
+                        <button class="btn-delete" onclick="cancelGroupOrder()">取消</button>
+                    </div>
                 </div>
+                <div style="margin-bottom: 20px;" id="groupNavSection">
+                    <p style="color: #888; margin-bottom: 16px;">修改分组名称会更新该分组下所有链接的分组信息</p>
+                    <nav class="category-nav" id="groupsCategoryNav">
+                        <button class="category-btn active" data-group-type="public">公开链接</button>
+                        <button class="category-btn" data-group-type="private">私密链接</button>
+                    </nav>
+                </div>
+                <div id="groupManagementList" class="groups-list"></div>
             </div>
         </div>
 
