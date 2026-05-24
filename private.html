@@ -33,9 +33,13 @@
                 <input type="text" id="privateSearchInput" placeholder="搜索链接...">
                 <button class="search-btn" id="privateSearchBtn">🔍</button>
             </div>
+            <div style="display: flex; justify-content: flex-end; margin-bottom: 15px;">
+                <button class="export-btn" id="privateExportBtn">📥 导出</button>
+            </div>
             <nav class="category-nav" id="privateCategoryNav">
                 <button class="category-btn active" data-group="all">全部</button>
             </nav>
+            
             <main class="links-grid" id="privateLinksGrid">
                 <div class="loading">加载中...</div>
             </main>
@@ -43,5 +47,16 @@
     </div>
 
     <script src="js/private.js"></script>
+
+    <div class="modal-overlay" id="privateExportModal">
+        <div class="modal-content">
+            <h3>📥 导出链接</h3>
+            <p>确定要导出当前链接数据吗？</p>
+            <div class="modal-btns">
+                <button class="modal-btn modal-btn-cancel" id="privateModalCancel">取消</button>
+                <button class="modal-btn modal-btn-confirm" id="privateModalConfirm">确定导出</button>
+            </div>
+        </div>
+    </div>
 </body>
 </html>

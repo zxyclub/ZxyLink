@@ -11,6 +11,9 @@ let publicCurrentGroup = 'all';
 let privateCurrentGroup = 'all';
 let publicSearchKeyword = '';
 let privateSearchKeyword = '';
+let publicCurrentPage = 1;
+let privateCurrentPage = 1;
+const PAGE_SIZE = 20;
 
 function showToast(msg, isError = false) {
     const toast = document.getElementById('toast');
@@ -85,14 +88,116 @@ function switchTab(tab) {
     if (tab === 'public') {
         document.getElementById('publicSection').classList.remove('hidden');
         document.getElementById('privateSection').classList.add('hidden');
-    } else {
+        document.getElementById('groupsSection').classList.add('hidden');
+    } else if (tab === 'private') {
         document.getElementById('publicSection').classList.add('hidden');
         document.getElementById('privateSection').classList.remove('hidden');
+        document.getElementById('groupsSection').classList.add('hidden');
         const token = getToken();
         if (token && privateLinks.length === 0) {
             loadPrivateLinks(token);
         }
+    } else if (tab === 'groups') {
+        document.getElementById('publicSection').classList.add('hidden');
+        document.getElementById('privateSection').classList.add('hidden');
+        document.getElementById('groupsSection').classList.remove('hidden');
+        renderGroupManagement();
     }
+}
+
+function renderGroupManagement() {
+    const container = document.getElementById('groupManagementList');
+    const publicGroups = [...new Set(publicLinks.map(link => link.group).filter(Boolean))];
+    const privateGroups = [...new Set(privateLinks.map(link => link.group).filter(Boolean))];
+    const allGroups = [...new Set([...publicGroups, ...privateGroups])];
+
+    if (allGroups.length === 0) {
+        container.innerHTML = '<p class="empty-msg">暂无分组</p>';
+        return;
+    }
+
+    container.innerHTML = allGroups.map((group, idx) => {
+        const publicCount = publicLinks.filter(link => link.group === group).length;
+        const privateCount = privateLinks.filter(link => link.group === group).length;
+        const safeIdx = 'group_' + idx;
+        return `
+            <div class="group-item" data-group="${group}" data-safe-idx="${safeIdx}">
+                <div class="group-info">
+                    <span class="group-name">${group}</span>
+                    <span class="group-count">
+                        ${publicCount > 0 ? `${publicCount} 个公开链接` : ''}
+                        ${publicCount > 0 && privateCount > 0 ? ' · ' : ''}
+                        ${privateCount > 0 ? `${privateCount} 个私密链接` : ''}
+                    </span>
+                </div>
+                <div class="group-actions">
+                    <button class="btn-edit" onclick="editGroupName('${safeIdx}', '${group}')">修改</button>
+                </div>
+            </div>
+        `;
+    }).join('');
+}
+
+window.editGroupName = function(safeIdx, oldGroupName) {
+    const item = document.querySelector(`[data-safe-idx="${safeIdx}"]`);
+    if (!item) return;
+
+    item.innerHTML = `
+        <div class="group-info">
+            <input type="text" class="group-input" id="edit-group-input" value="${oldGroupName}" placeholder="输入新分组名称">
+        </div>
+        <div class="group-actions">
+            <button class="btn-save" onclick="saveGroupName('${safeIdx}', '${oldGroupName}')">保存</button>
+            <button class="btn-cancel" onclick="renderGroupManagement()">取消</button>
+        </div>
+    `;
+
+    document.getElementById('edit-group-input').focus();
+}
+
+window.saveGroupName = async function(safeIdx, oldGroupName) {
+    const newGroupName = document.getElementById('edit-group-input').value.trim();
+
+    if (!newGroupName) {
+        showToast('分组名称不能为空', true);
+        return;
+    }
+
+    if (newGroupName === oldGroupName) {
+        renderGroupManagement();
+        return;
+    }
+
+    // 更新公开链接
+    let hasPublicChanges = false;
+    publicLinks.forEach(link => {
+        if (link.group === oldGroupName) {
+            link.group = newGroupName;
+            hasPublicChanges = true;
+        }
+    });
+
+    // 更新私密链接
+    let hasPrivateChanges = false;
+    privateLinks.forEach(link => {
+        if (link.group === oldGroupName) {
+            link.group = newGroupName;
+            hasPrivateChanges = true;
+        }
+    });
+
+    // 保存到 Gist
+    if (hasPublicChanges) {
+        await savePublicLinks();
+    }
+    if (hasPrivateChanges) {
+        await savePrivateLinks();
+    }
+
+    renderPublicCategories();
+    renderPrivateCategories();
+    renderGroupManagement();
+    showToast('分组名称已更新');
 }
 
 function renderCategoryButtons(links, inputId) {
@@ -116,9 +221,16 @@ window.fillGroup = function(inputId, group) {
 function renderPublicCategories() {
     const nav = document.getElementById('publicCategoryNav');
     const groups = [...new Set(publicLinks.map(link => link.group).filter(Boolean))];
+    const hasUngrouped = publicLinks.some(link => !link.group);
 
     const isAllActive = publicCurrentGroup === 'all' ? 'active' : '';
     let html = `<button class="category-btn ${isAllActive}" data-group="all">全部</button>`;
+
+    if (hasUngrouped) {
+        const isUngroupedActive = publicCurrentGroup === 'ungrouped' ? 'active' : '';
+        html += `<button class="category-btn ${isUngroupedActive}" data-group="ungrouped">未分组</button>`;
+    }
+
     groups.forEach(group => {
         const isActive = group === publicCurrentGroup ? 'active' : '';
         html += `<button class="category-btn ${isActive}" data-group="${group}">${group}</button>`;
@@ -130,6 +242,7 @@ function renderPublicCategories() {
             document.querySelectorAll('#publicCategoryNav .category-btn').forEach(b => b.classList.remove('active'));
             btn.classList.add('active');
             publicCurrentGroup = btn.dataset.group;
+            publicCurrentPage = 1;
             renderPublicLinks();
         });
     });
@@ -138,9 +251,16 @@ function renderPublicCategories() {
 function renderPrivateCategories() {
     const nav = document.getElementById('privateCategoryNav');
     const groups = [...new Set(privateLinks.map(link => link.group).filter(Boolean))];
+    const hasUngrouped = privateLinks.some(link => !link.group);
 
     const isAllActive = privateCurrentGroup === 'all' ? 'active' : '';
     let html = `<button class="category-btn ${isAllActive}" data-group="all">全部</button>`;
+
+    if (hasUngrouped) {
+        const isUngroupedActive = privateCurrentGroup === 'ungrouped' ? 'active' : '';
+        html += `<button class="category-btn ${isUngroupedActive}" data-group="ungrouped">未分组</button>`;
+    }
+
     groups.forEach(group => {
         const isActive = group === privateCurrentGroup ? 'active' : '';
         html += `<button class="category-btn ${isActive}" data-group="${group}">${group}</button>`;
@@ -152,6 +272,7 @@ function renderPrivateCategories() {
             document.querySelectorAll('#privateCategoryNav .category-btn').forEach(b => b.classList.remove('active'));
             btn.classList.add('active');
             privateCurrentGroup = btn.dataset.group;
+            privateCurrentPage = 1;
             renderPrivateLinks();
         });
     });
@@ -336,9 +457,14 @@ function renderPublicLinks() {
     const container = document.getElementById('linksList');
     const hasToken = getToken();
 
-    let filteredLinks = publicCurrentGroup === 'all'
-        ? publicLinks
-        : publicLinks.filter(link => link.group === publicCurrentGroup);
+    let filteredLinks;
+    if (publicCurrentGroup === 'all') {
+        filteredLinks = publicLinks;
+    } else if (publicCurrentGroup === 'ungrouped') {
+        filteredLinks = publicLinks.filter(link => !link.group);
+    } else {
+        filteredLinks = publicLinks.filter(link => link.group === publicCurrentGroup);
+    }
 
     if (publicSearchKeyword) {
         filteredLinks = filteredLinks.filter(link =>
@@ -346,15 +472,22 @@ function renderPublicLinks() {
         );
     }
 
+    const totalPages = Math.max(1, Math.ceil(filteredLinks.length / PAGE_SIZE));
+    if (publicCurrentPage > totalPages) publicCurrentPage = totalPages;
+
     if (filteredLinks.length === 0) {
         container.innerHTML = publicCurrentGroup === 'all' && !publicSearchKeyword
             ? (hasToken ? '<p class="empty-msg">暂无链接，请添加</p>' : '')
             : '<p class="empty-msg">未找到匹配的链接</p>';
+        document.getElementById('publicPagination').innerHTML = '';
         renderPublicCategories();
         return;
     }
 
-    container.innerHTML = filteredLinks.map((link, idx) => {
+    const startIdx = (publicCurrentPage - 1) * PAGE_SIZE;
+    const pageLinks = filteredLinks.slice(startIdx, startIdx + PAGE_SIZE);
+
+    container.innerHTML = pageLinks.map((link) => {
         const originalIndex = publicLinks.indexOf(link);
         return `
             <div class="link-item" data-index="${originalIndex}">
@@ -380,17 +513,49 @@ function renderPublicLinks() {
         `;
     }).join('');
 
+    renderPublicPagination(totalPages, filteredLinks.length);
     renderCategoryButtons(publicLinks, 'newGroup');
     renderPublicCategories();
 }
+
+function renderPublicPagination(totalPages, totalCount) {
+    const container = document.getElementById('publicPagination');
+    if (totalPages <= 1) {
+        container.innerHTML = '';
+        return;
+    }
+
+    let html = `<span class="page-info">第 ${publicCurrentPage} / ${totalPages} 页，共 ${totalCount} 条</span>`;
+    html += '<div class="page-buttons">';
+    html += `<button class="page-btn" onclick="goPublicPage(${publicCurrentPage - 1})" ${publicCurrentPage === 1 ? 'disabled' : ''}>上一页</button>`;
+    html += `<button class="page-btn" onclick="goPublicPage(${publicCurrentPage + 1})" ${publicCurrentPage === totalPages ? 'disabled' : ''}>下一页</button>`;
+    html += '</div>';
+    container.innerHTML = html;
+}
+
+window.goPublicPage = function(page) {
+    const filteredLinks = publicCurrentGroup === 'all' ? publicLinks
+        : publicCurrentGroup === 'ungrouped' ? publicLinks.filter(link => !link.group)
+        : publicLinks.filter(link => link.group === publicCurrentGroup);
+    const totalPages = Math.ceil(filteredLinks.length / PAGE_SIZE);
+    if (page >= 1 && page <= totalPages) {
+        publicCurrentPage = page;
+        renderPublicLinks();
+    }
+};
 
 function renderPrivateLinks() {
     const container = document.getElementById('privateLinksList');
     const hasToken = getToken();
 
-    let filteredLinks = privateCurrentGroup === 'all'
-        ? privateLinks
-        : privateLinks.filter(link => link.group === privateCurrentGroup);
+    let filteredLinks;
+    if (privateCurrentGroup === 'all') {
+        filteredLinks = privateLinks;
+    } else if (privateCurrentGroup === 'ungrouped') {
+        filteredLinks = privateLinks.filter(link => !link.group);
+    } else {
+        filteredLinks = privateLinks.filter(link => link.group === privateCurrentGroup);
+    }
 
     if (privateSearchKeyword) {
         filteredLinks = filteredLinks.filter(link =>
@@ -398,15 +563,22 @@ function renderPrivateLinks() {
         );
     }
 
+    const totalPages = Math.max(1, Math.ceil(filteredLinks.length / PAGE_SIZE));
+    if (privateCurrentPage > totalPages) privateCurrentPage = totalPages;
+
     if (filteredLinks.length === 0) {
         container.innerHTML = privateCurrentGroup === 'all' && !privateSearchKeyword
             ? (hasToken ? '<p class="empty-msg">暂无私密链接，请添加</p>' : '')
             : '<p class="empty-msg">未找到匹配的链接</p>';
+        document.getElementById('privatePagination').innerHTML = '';
         renderPrivateCategories();
         return;
     }
 
-    container.innerHTML = filteredLinks.map((link, idx) => {
+    const startIdx = (privateCurrentPage - 1) * PAGE_SIZE;
+    const pageLinks = filteredLinks.slice(startIdx, startIdx + PAGE_SIZE);
+
+    container.innerHTML = pageLinks.map((link) => {
         const originalIndex = privateLinks.indexOf(link);
         return `
             <div class="link-item" data-index="${originalIndex}">
@@ -432,9 +604,36 @@ function renderPrivateLinks() {
         `;
     }).join('');
 
+    renderPrivatePagination(totalPages, filteredLinks.length);
     renderCategoryButtons(privateLinks, 'newPrivateGroup');
     renderPrivateCategories();
 }
+
+function renderPrivatePagination(totalPages, totalCount) {
+    const container = document.getElementById('privatePagination');
+    if (totalPages <= 1) {
+        container.innerHTML = '';
+        return;
+    }
+
+    let html = `<span class="page-info">第 ${privateCurrentPage} / ${totalPages} 页，共 ${totalCount} 条</span>`;
+    html += '<div class="page-buttons">';
+    html += `<button class="page-btn" onclick="goPrivatePage(${privateCurrentPage - 1})" ${privateCurrentPage === 1 ? 'disabled' : ''}>上一页</button>`;
+    html += `<button class="page-btn" onclick="goPrivatePage(${privateCurrentPage + 1})" ${privateCurrentPage === totalPages ? 'disabled' : ''}>下一页</button>`;
+    html += '</div>';
+    container.innerHTML = html;
+}
+
+window.goPrivatePage = function(page) {
+    const filteredLinks = privateCurrentGroup === 'all' ? privateLinks
+        : privateCurrentGroup === 'ungrouped' ? privateLinks.filter(link => !link.group)
+        : privateLinks.filter(link => link.group === privateCurrentGroup);
+    const totalPages = Math.ceil(filteredLinks.length / PAGE_SIZE);
+    if (page >= 1 && page <= totalPages) {
+        privateCurrentPage = page;
+        renderPrivateLinks();
+    }
+};
 
 function formatUrl(url) {
     if (!url) return '';
@@ -571,12 +770,14 @@ function initPublicSearch() {
     searchInput.addEventListener('keypress', (e) => {
         if (e.key === 'Enter') {
             publicSearchKeyword = searchInput.value.trim().toLowerCase();
+            publicCurrentPage = 1;
             renderPublicLinks();
         }
     });
 
     searchBtn.addEventListener('click', () => {
         publicSearchKeyword = searchInput.value.trim().toLowerCase();
+        publicCurrentPage = 1;
         renderPublicLinks();
     });
 }
@@ -588,15 +789,158 @@ function initPrivateSearch() {
     searchInput.addEventListener('keypress', (e) => {
         if (e.key === 'Enter') {
             privateSearchKeyword = searchInput.value.trim().toLowerCase();
+            privateCurrentPage = 1;
             renderPrivateLinks();
         }
     });
 
     searchBtn.addEventListener('click', () => {
         privateSearchKeyword = searchInput.value.trim().toLowerCase();
+        privateCurrentPage = 1;
         renderPrivateLinks();
     });
 }
 
 initPublicSearch();
 initPrivateSearch();
+
+function importPublicLinks() {
+    document.getElementById('publicImportModal').classList.add('show');
+}
+
+function importPrivateLinks() {
+    document.getElementById('privateImportModal').classList.add('show');
+}
+
+function closePublicImportModal() {
+    document.getElementById('publicImportModal').classList.remove('show');
+}
+
+function closePrivateImportModal() {
+    document.getElementById('privateImportModal').classList.remove('show');
+}
+
+function handlePublicFileImport(event) {
+    const file = event.target.files[0];
+    if (!file) return;
+
+    closePublicImportModal();
+
+    const reader = new FileReader();
+    reader.onload = async (e) => {
+        try {
+            const importedLinks = JSON.parse(e.target.result);
+            if (!Array.isArray(importedLinks)) {
+                showToast('文件格式错误：需要是JSON数组', true);
+                return;
+            }
+
+            const existingKeys = new Set(publicLinks.map(link => `${link.title}|${link.url}`));
+            let addedCount = 0;
+
+            for (const link of importedLinks) {
+                if (link.title && link.url) {
+                    const key = `${link.title}|${link.url}`;
+                    if (!existingKeys.has(key)) {
+                        publicLinks.push({
+                            icon: link.icon || '🌐',
+                            title: link.title,
+                            url: link.url,
+                            group: link.group || ''
+                        });
+                        existingKeys.add(key);
+                        addedCount++;
+                    }
+                }
+            }
+
+            if (addedCount > 0) {
+                await savePublicLinks();
+                renderPublicLinks();
+                showToast(`成功导入 ${addedCount} 个链接`);
+            } else {
+                showToast('没有新的链接需要导入', true);
+            }
+        } catch (error) {
+            showToast('文件解析失败', true);
+            console.error(error);
+        }
+        event.target.value = '';
+    };
+    reader.readAsText(file);
+}
+
+function handlePrivateFileImport(event) {
+    const file = event.target.files[0];
+    if (!file) return;
+
+    closePrivateImportModal();
+
+    const reader = new FileReader();
+    reader.onload = async (e) => {
+        try {
+            const importedLinks = JSON.parse(e.target.result);
+            if (!Array.isArray(importedLinks)) {
+                showToast('文件格式错误：需要是JSON数组', true);
+                return;
+            }
+
+            const existingKeys = new Set(privateLinks.map(link => `${link.title}|${link.url}`));
+            let addedCount = 0;
+
+            for (const link of importedLinks) {
+                if (link.title && link.url) {
+                    const key = `${link.title}|${link.url}`;
+                    if (!existingKeys.has(key)) {
+                        privateLinks.push({
+                            icon: link.icon || '🌐',
+                            title: link.title,
+                            url: link.url,
+                            group: link.group || ''
+                        });
+                        existingKeys.add(key);
+                        addedCount++;
+                    }
+                }
+            }
+
+            if (addedCount > 0) {
+                await savePrivateLinks();
+                renderPrivateLinks();
+                showToast(`成功导入 ${addedCount} 个链接`);
+            } else {
+                showToast('没有新的链接需要导入', true);
+            }
+        } catch (error) {
+            showToast('文件解析失败', true);
+            console.error(error);
+        }
+        event.target.value = '';
+    };
+    reader.readAsText(file);
+}
+
+document.getElementById('importPublicBtn').addEventListener('click', importPublicLinks);
+document.getElementById('importPrivateBtn').addEventListener('click', importPrivateLinks);
+document.getElementById('publicFileInput').addEventListener('change', handlePublicFileImport);
+document.getElementById('privateFileInput').addEventListener('change', handlePrivateFileImport);
+
+document.getElementById('publicImportCancel').addEventListener('click', closePublicImportModal);
+document.getElementById('privateImportCancel').addEventListener('click', closePrivateImportModal);
+document.getElementById('publicImportConfirm').addEventListener('click', () => {
+    document.getElementById('publicFileInput').click();
+});
+document.getElementById('privateImportConfirm').addEventListener('click', () => {
+    document.getElementById('privateFileInput').click();
+});
+
+document.getElementById('publicImportModal').addEventListener('click', (e) => {
+    if (e.target === document.getElementById('publicImportModal')) {
+        closePublicImportModal();
+    }
+});
+document.getElementById('privateImportModal').addEventListener('click', (e) => {
+    if (e.target === document.getElementById('privateImportModal')) {
+        closePrivateImportModal();
+    }
+});

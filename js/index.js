@@ -59,9 +59,16 @@ async function loadLinks() {
 function renderCategories() {
     const nav = document.getElementById('categoryNav');
     const groups = [...new Set(allLinks.map(link => link.group).filter(Boolean))];
+    const hasUngrouped = allLinks.some(link => !link.group);
 
     const isAllActive = currentGroup === 'all' ? 'active' : '';
     let html = `<button class="category-btn ${isAllActive}" data-group="all">全部</button>`;
+
+    if (hasUngrouped) {
+        const isUngroupedActive = currentGroup === 'ungrouped' ? 'active' : '';
+        html += `<button class="category-btn ${isUngroupedActive}" data-group="ungrouped">未分组</button>`;
+    }
+
     groups.forEach(group => {
         const isActive = group === currentGroup ? 'active' : '';
         html += `<button class="category-btn ${isActive}" data-group="${group}">${group}</button>`;
@@ -80,9 +87,14 @@ function renderCategories() {
 
 function renderLinks() {
     const container = document.getElementById('linksGrid');
-    let filteredLinks = currentGroup === 'all'
-        ? allLinks
-        : allLinks.filter(link => link.group === currentGroup);
+    let filteredLinks;
+    if (currentGroup === 'all') {
+        filteredLinks = allLinks;
+    } else if (currentGroup === 'ungrouped') {
+        filteredLinks = allLinks.filter(link => !link.group);
+    } else {
+        filteredLinks = allLinks.filter(link => link.group === currentGroup);
+    }
 
     if (searchKeyword) {
         filteredLinks = filteredLinks.filter(link =>
@@ -128,5 +140,41 @@ function loadAvatar() {
     }
 }
 
+function exportLinks() {
+    if (allLinks.length === 0) {
+        alert('暂无链接可导出');
+        return;
+    }
+    document.getElementById('exportModal').classList.add('show');
+}
+
+function doExportLinks() {
+    const blob = new Blob([JSON.stringify(allLinks, null, 2)], { type: 'application/json' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = 'zxylinks.json';
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+    document.getElementById('exportModal').classList.remove('show');
+}
+
+function closeExportModal() {
+    document.getElementById('exportModal').classList.remove('show');
+}
+
 loadLinks();
 initSearch();
+
+document.addEventListener('DOMContentLoaded', () => {
+    document.getElementById('exportBtn').addEventListener('click', exportLinks);
+    document.getElementById('modalCancel').addEventListener('click', closeExportModal);
+    document.getElementById('modalConfirm').addEventListener('click', doExportLinks);
+    document.getElementById('exportModal').addEventListener('click', (e) => {
+        if (e.target === document.getElementById('exportModal')) {
+            closeExportModal();
+        }
+    });
+});

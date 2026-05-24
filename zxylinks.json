@@ -1,0 +1,32 @@
+[
+  {
+    "icon": "📧",
+    "title": "Gmail-test",
+    "url": "https://gmail.com",
+    "group": "测试1"
+  },
+  {
+    "icon": "🌐",
+    "title": "测试2",
+    "url": "https://www.baidu.com/",
+    "group": "测试2"
+  },
+  {
+    "icon": "🌐",
+    "title": "测试3",
+    "url": "https://baidu.com",
+    "group": "测试3"
+  },
+  {
+    "icon": "🌐",
+    "title": "测试4",
+    "url": "https://www.baidu.com/",
+    "group": ""
+  },
+ {
+    "icon": "🌐",
+    "title": "测试5",
+    "url": "https://www.baidu.com/",
+    "group": "12"
+  }
+]

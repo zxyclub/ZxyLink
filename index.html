@@ -18,15 +18,19 @@
                 </div>
             </div>
             <h1>🔗 日木斤的收藏夹</h1>
+            <br>
             <div class="search-box">
                 <input type="text" id="searchInput" placeholder="搜索链接...">
                 <button class="search-btn" id="searchBtn">🔍</button>
+            </div>
+            <div style="display: flex; justify-content: flex-end; margin-bottom: 15px;">
+                <button class="export-btn" id="exportBtn">📥 导出</button>
             </div>
             <nav class="category-nav" id="categoryNav">
                 <button class="category-btn active" data-group="all">全部</button>
             </nav>
         </header>
-
+        
         <main class="links-grid" id="linksGrid">
             <div class="loading">加载中...</div>
         </main>
@@ -44,5 +48,16 @@
     </div>
 
     <script src="js/index.js"></script>
+
+    <div class="modal-overlay" id="exportModal">
+        <div class="modal-content">
+            <h3>📥 导出链接</h3>
+            <p>确定要导出当前链接数据吗？</p>
+            <div class="modal-btns">
+                <button class="modal-btn modal-btn-cancel" id="modalCancel">取消</button>
+                <button class="modal-btn modal-btn-confirm" id="modalConfirm">确定导出</button>
+            </div>
+        </div>
+    </div>
 </body>
 </html>

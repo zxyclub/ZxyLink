@@ -91,6 +91,23 @@
     cursor: pointer;
 }
 
+.import-btn {
+    padding: 8px 16px;
+    background: rgba(255, 255, 255, 0.08);
+    border: 1px solid rgba(255, 255, 255, 0.15);
+    border-radius: 8px;
+    color: #888;
+    cursor: pointer;
+    font-size: 0.9rem;
+    transition: all 0.3s;
+}
+
+.import-btn:hover {
+    background: rgba(255, 255, 255, 0.15);
+    color: #fff;
+    border-color: rgba(255, 255, 255, 0.25);
+}
+
 .links-list {
     display: flex;
     flex-direction: column;
@@ -416,4 +433,100 @@
     .config-row input {
         flex: 1;
     }
+}
+
+.pagination {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-top: 20px;
+    padding: 16px;
+    background: rgba(255, 255, 255, 0.03);
+    border-radius: 12px;
+    flex-wrap: wrap;
+    gap: 12px;
+}
+
+.page-info {
+    color: #888;
+    font-size: 0.9rem;
+}
+
+.page-buttons {
+    display: flex;
+    gap: 8px;
+}
+
+.page-btn {
+    padding: 8px 16px;
+    background: rgba(255, 255, 255, 0.08);
+    border: 1px solid rgba(255, 255, 255, 0.15);
+    border-radius: 8px;
+    color: #888;
+    cursor: pointer;
+    font-size: 0.9rem;
+    transition: all 0.3s;
+}
+
+.page-btn:hover:not(:disabled) {
+    background: rgba(0, 217, 255, 0.2);
+    color: #00d9ff;
+    border-color: rgba(0, 217, 255, 0.3);
+}
+
+.page-btn:disabled {
+    opacity: 0.4;
+    cursor: not-allowed;
+}
+
+.groups-list {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+.group-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    background: rgba(255, 255, 255, 0.03);
+    border-radius: 12px;
+    padding: 16px;
+}
+
+.group-info {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+
+.group-name {
+    font-weight: bold;
+    color: #fff;
+    font-size: 1rem;
+}
+
+.group-count {
+    color: #888;
+    font-size: 0.85rem;
+}
+
+.group-actions {
+    display: flex;
+    gap: 8px;
+}
+
+.group-input {
+    padding: 8px 12px;
+    background: rgba(255, 255, 255, 0.08);
+    border: 1px solid rgba(255, 255, 255, 0.15);
+    border-radius: 8px;
+    color: #fff;
+    font-size: 1rem;
+    min-width: 200px;
+}
+
+.group-input:focus {
+    outline: none;
+    border-color: #00d9ff;
 }

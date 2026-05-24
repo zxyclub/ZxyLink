@@ -21,9 +21,16 @@ function showSuccess(msg) {
 function renderCategories(links) {
     const nav = document.getElementById('privateCategoryNav');
     const groups = [...new Set(links.map(link => link.group).filter(Boolean))];
+    const hasUngrouped = links.some(link => !link.group);
 
     const isAllActive = currentPrivateGroup === 'all' ? 'active' : '';
     let html = `<button class="category-btn ${isAllActive}" data-group="all">全部</button>`;
+
+    if (hasUngrouped) {
+        const isUngroupedActive = currentPrivateGroup === 'ungrouped' ? 'active' : '';
+        html += `<button class="category-btn ${isUngroupedActive}" data-group="ungrouped">未分组</button>`;
+    }
+
     groups.forEach(group => {
         const isActive = group === currentPrivateGroup ? 'active' : '';
         html += `<button class="category-btn ${isActive}" data-group="${group}">${group}</button>`;
@@ -42,15 +49,6 @@ function renderCategories(links) {
 
 function renderLinks(links) {
     const container = document.getElementById('privateLinksGrid');
-    let filteredLinks = currentPrivateGroup === 'all'
-        ? links
-        : links.filter(link => link.group === currentPrivateGroup);
-
-    if (privateSearchKeyword) {
-        filteredLinks = filteredLinks.filter(link =>
-            link.title.toLowerCase().includes(privateSearchKeyword)
-        );
-    }
 
     if (!Array.isArray(links) || links.length === 0) {
         container.innerHTML = `
@@ -59,6 +57,21 @@ function renderLinks(links) {
             </div>
         `;
         return;
+    }
+
+    let filteredLinks;
+    if (currentPrivateGroup === 'all') {
+        filteredLinks = links;
+    } else if (currentPrivateGroup === 'ungrouped') {
+        filteredLinks = links.filter(link => !link.group);
+    } else {
+        filteredLinks = links.filter(link => link.group === currentPrivateGroup);
+    }
+
+    if (privateSearchKeyword) {
+        filteredLinks = filteredLinks.filter(link =>
+            link.title.toLowerCase().includes(privateSearchKeyword)
+        );
     }
 
     if (filteredLinks.length === 0) {
@@ -191,5 +204,41 @@ function initPrivateSearch() {
         renderLinks(allPrivateLinks);
     });
 }
+
+function exportPrivateLinks() {
+    if (allPrivateLinks.length === 0) {
+        alert('暂无链接可导出');
+        return;
+    }
+    document.getElementById('privateExportModal').classList.add('show');
+}
+
+function doExportPrivateLinks() {
+    const blob = new Blob([JSON.stringify(allPrivateLinks, null, 2)], { type: 'application/json' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = 'zxylink-private.json';
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+    document.getElementById('privateExportModal').classList.remove('show');
+}
+
+function closePrivateExportModal() {
+    document.getElementById('privateExportModal').classList.remove('show');
+}
+
+document.addEventListener('DOMContentLoaded', () => {
+    document.getElementById('privateExportBtn').addEventListener('click', exportPrivateLinks);
+    document.getElementById('privateModalCancel').addEventListener('click', closePrivateExportModal);
+    document.getElementById('privateModalConfirm').addEventListener('click', doExportPrivateLinks);
+    document.getElementById('privateExportModal').addEventListener('click', (e) => {
+        if (e.target === document.getElementById('privateExportModal')) {
+            closePrivateExportModal();
+        }
+    });
+});
 
 initPrivateSearch();
