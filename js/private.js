@@ -1,5 +1,10 @@
+// ==================== GIST 配置 ====================
+// 私密链接是通过 Token 动态查找匹配的文件名的 Gist
+// 修改这里可以换成自己的私密链接文件名
 const PRIVATE_FILENAME = 'zxylink-private.json';
+// 浏览器 LocalStorage 中存储 GitHub Token 的键名
 const TOKEN_STORAGE_KEY = 'zxylink_private_token';
+// ===================================================
 let allPrivateLinks = [];
 let currentPrivateGroup = 'all';
 let privateSearchKeyword = '';

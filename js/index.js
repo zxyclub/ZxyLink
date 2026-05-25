@@ -1,4 +1,9 @@
+// ==================== GIST 配置 ====================
+// 修改这里可以换成自己的 Gist ID
 const GIST_ID = 'd12a422a770678dcbb46b8f8050ad2c6';
+// 修改这里可以换成自己的 GitHub 用户名
+const GIST_OWNER = 'zxyclub';
+// ===================================================
 const TOKEN_KEY = 'github_token';
 let allLinks = [];
 let currentGroup = 'all';
@@ -25,7 +30,7 @@ async function loadLinks() {
     const container = document.getElementById('linksGrid');
 
     try {
-        const response = await fetch(`https://gist.githubusercontent.com/zxyclub/${GIST_ID}/raw/zxylinks.json?t=${Date.now()}`);
+        const response = await fetch(`https://gist.githubusercontent.com/${GIST_OWNER}/${GIST_ID}/raw/zxylinks.json?t=${Date.now()}`);
 
         if (!response.ok) {
             throw new Error('获取数据失败');
