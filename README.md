@@ -3,8 +3,7 @@
 > **重要提示**：本项目为个人学习自用项目，代码仓库和 Gist ID 均为作者个人所有，不对他人开放使用。他人 Fork 或引用本项目将无法正常使用。
 >
 > 项目结构说明请查看：README-Detail.md
->
-> 项目地址：https://zxyclub.github.io/ZxyLink/
+
 
 ## 项目性质
 
@@ -51,6 +50,17 @@
 1. 第三方服务可能出现临时不可用，本项目不对此负责
 2. 本项目不提供任何明示或暗示的保证
 3. 用户需自行承担使用本项目的所有风险
+
+> 项目地址：
+> 
+> GitHub：https://zxyclub.github.io/ZxyLink/
+> 
+> Vercel：https://zxylink.vercel.app/
+> 
+> Cloudflare：https://zxylink.zxyhub.workers.dev/
+> 
+> 帽子云：https://zxylink-ec1rv01me.maozi.io/
+
 
 ---
 
