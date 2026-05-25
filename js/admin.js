@@ -1236,6 +1236,7 @@ window.toggleSelectAll = function(type) {
     const checkAll = document.getElementById(checkAllId);
     const links = type === 'public' ? publicLinks : privateLinks;
     const selectedIndices = type === 'public' ? publicSelectedIndices : privateSelectedIndices;
+    const currentPage = type === 'public' ? publicCurrentPage : privateCurrentPage;
     
     if (checkAll.checked) {
         let filteredLinks;
@@ -1259,8 +1260,13 @@ window.toggleSelectAll = function(type) {
             }
         }
         
+        // 只选择当前分页的链接
+        const startIdx = (currentPage - 1) * PAGE_SIZE;
+        const endIdx = startIdx + PAGE_SIZE;
+        const pageLinks = filteredLinks.slice(startIdx, endIdx);
+        
         selectedIndices.length = 0;
-        filteredLinks.forEach(link => {
+        pageLinks.forEach(link => {
             const idx = links.indexOf(link);
             selectedIndices.push(idx);
         });
@@ -1276,6 +1282,7 @@ function updateBatchUI(type) {
     const selectAllId = type === 'public' ? 'publicSelectAll' : 'privateSelectAll';
     const links = type === 'public' ? publicLinks : privateLinks;
     const selectedIndices = type === 'public' ? publicSelectedIndices : privateSelectedIndices;
+    const currentPage = type === 'public' ? publicCurrentPage : privateCurrentPage;
     
     document.getElementById(selectedCountId).textContent = selectedIndices.length;
     
@@ -1300,7 +1307,12 @@ function updateBatchUI(type) {
         }
     }
     
-    const allSelected = filteredLinks.length > 0 && filteredLinks.every(link => 
+    // 只检查当前分页的链接是否都被选中
+    const startIdx = (currentPage - 1) * PAGE_SIZE;
+    const endIdx = startIdx + PAGE_SIZE;
+    const pageLinks = filteredLinks.slice(startIdx, endIdx);
+    
+    const allSelected = pageLinks.length > 0 && pageLinks.every(link => 
         selectedIndices.includes(links.indexOf(link))
     );
     document.getElementById(selectAllId).checked = allSelected;
