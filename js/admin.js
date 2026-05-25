@@ -1195,8 +1195,12 @@ function handlePrivateFileImport(event) {
 
 document.getElementById('importPublicBtn').addEventListener('click', importPublicLinks);
 document.getElementById('importPrivateBtn').addEventListener('click', importPrivateLinks);
+document.getElementById('forceImportPublicBtn').addEventListener('click', forceImportPublicLinks);
+document.getElementById('forceImportPrivateBtn').addEventListener('click', forceImportPrivateLinks);
 document.getElementById('publicFileInput').addEventListener('change', handlePublicFileImport);
 document.getElementById('privateFileInput').addEventListener('change', handlePrivateFileImport);
+document.getElementById('publicForceFileInput').addEventListener('change', handlePublicForceFileImport);
+document.getElementById('privateForceFileInput').addEventListener('change', handlePrivateForceFileImport);
 
 document.getElementById('publicImportCancel').addEventListener('click', closePublicImportModal);
 document.getElementById('privateImportCancel').addEventListener('click', closePrivateImportModal);
@@ -1205,6 +1209,15 @@ document.getElementById('publicImportConfirm').addEventListener('click', () => {
 });
 document.getElementById('privateImportConfirm').addEventListener('click', () => {
     document.getElementById('privateFileInput').click();
+});
+
+document.getElementById('publicForceImportCancel').addEventListener('click', closePublicForceImportModal);
+document.getElementById('privateForceImportCancel').addEventListener('click', closePrivateForceImportModal);
+document.getElementById('publicForceImportConfirm').addEventListener('click', () => {
+    document.getElementById('publicForceFileInput').click();
+});
+document.getElementById('privateForceImportConfirm').addEventListener('click', () => {
+    document.getElementById('privateForceFileInput').click();
 });
 
 document.getElementById('publicImportModal').addEventListener('click', (e) => {
@@ -1217,6 +1230,116 @@ document.getElementById('privateImportModal').addEventListener('click', (e) => {
         closePrivateImportModal();
     }
 });
+
+document.getElementById('publicForceImportModal').addEventListener('click', (e) => {
+    if (e.target === document.getElementById('publicForceImportModal')) {
+        closePublicForceImportModal();
+    }
+});
+document.getElementById('privateForceImportModal').addEventListener('click', (e) => {
+    if (e.target === document.getElementById('privateForceImportModal')) {
+        closePrivateForceImportModal();
+    }
+});
+
+// 强制导入功能
+function forceImportPublicLinks() {
+    document.getElementById('publicForceImportModal').classList.add('show');
+}
+
+function forceImportPrivateLinks() {
+    document.getElementById('privateForceImportModal').classList.add('show');
+}
+
+function closePublicForceImportModal() {
+    document.getElementById('publicForceImportModal').classList.remove('show');
+}
+
+function closePrivateForceImportModal() {
+    document.getElementById('privateForceImportModal').classList.remove('show');
+}
+
+function handlePublicForceFileImport(event) {
+    const file = event.target.files[0];
+    if (!file) return;
+
+    closePublicForceImportModal();
+
+    const reader = new FileReader();
+    reader.onload = async (e) => {
+        try {
+            const importedLinks = JSON.parse(e.target.result);
+            if (!Array.isArray(importedLinks)) {
+                showToast('文件格式错误：需要是JSON数组', true);
+                return;
+            }
+
+            // 强制导入：直接替换所有公开链接
+            publicLinks.length = 0;
+            for (const link of importedLinks) {
+                if (link.title && link.url) {
+                    publicLinks.push({
+                        icon: link.icon || '🌐',
+                        title: link.title,
+                        url: link.url,
+                        group: link.group || ''
+                    });
+                }
+            }
+
+            await savePublicLinks();
+            renderPublicLinks();
+            renderPublicCategories();
+            showToast(`强制导入成功，共 ${publicLinks.length} 个链接`);
+        } catch (error) {
+            showToast('文件解析失败', true);
+            console.error(error);
+        }
+        event.target.value = '';
+    };
+    reader.readAsText(file);
+}
+
+function handlePrivateForceFileImport(event) {
+    const file = event.target.files[0];
+    if (!file) return;
+
+    closePrivateForceImportModal();
+
+    const reader = new FileReader();
+    reader.onload = async (e) => {
+        try {
+            const importedLinks = JSON.parse(e.target.result);
+            if (!Array.isArray(importedLinks)) {
+                showToast('文件格式错误：需要是JSON数组', true);
+                return;
+            }
+
+            // 强制导入：直接替换所有私密链接
+            privateLinks.length = 0;
+            for (const link of importedLinks) {
+                if (link.title && link.url) {
+                    privateLinks.push({
+                        icon: link.icon || '🌐',
+                        title: link.title,
+                        url: link.url,
+                        group: link.group || ''
+                    });
+                }
+            }
+
+            await savePrivateLinks();
+            renderPrivateLinks();
+            renderPrivateCategories();
+            showToast(`强制导入成功，共 ${privateLinks.length} 个链接`);
+        } catch (error) {
+            showToast('文件解析失败', true);
+            console.error(error);
+        }
+        event.target.value = '';
+    };
+    reader.readAsText(file);
+}
 
 // 批量删除功能
 window.toggleSelectItem = function(type, index) {

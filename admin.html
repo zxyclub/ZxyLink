@@ -36,9 +36,13 @@
                 <div id="editSection" class="hidden">
                     <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
                         <h2>➕ 添加新链接</h2>
-                        <button class="import-btn" id="importPublicBtn">📥 批量导入</button>
+                        <div style="display: flex; gap: 10px;">
+                            <button class="import-btn" id="importPublicBtn">📥 批量导入</button>
+                            <button class="import-btn" id="forceImportPublicBtn" style="background: rgba(255, 107, 107, 0.2);">⚡ 强制导入</button>
+                        </div>
                     </div>
                     <input type="file" id="publicFileInput" accept=".json" style="display: none;">
+                    <input type="file" id="publicForceFileInput" accept=".json" style="display: none;">
                     <div id="newGroupCategories" class="category-quick-btns"></div>
                     <form id="addForm" class="form-row">
                         <div class="form-main">
@@ -85,9 +89,13 @@
                 <div id="privateEditSection" class="hidden">
                     <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
                         <h2>➕ 添加新私密链接</h2>
-                        <button class="import-btn" id="importPrivateBtn">📥 批量导入</button>
+                        <div style="display: flex; gap: 10px;">
+                            <button class="import-btn" id="importPrivateBtn">📥 批量导入</button>
+                            <button class="import-btn" id="forceImportPrivateBtn" style="background: rgba(255, 107, 107, 0.2);">⚡ 强制导入</button>
+                        </div>
                     </div>
                     <input type="file" id="privateFileInput" accept=".json" style="display: none;">
+                    <input type="file" id="privateForceFileInput" accept=".json" style="display: none;">
                     <div id="newPrivateGroupCategories" class="category-quick-btns"></div>
                     <form id="privateAddForm" class="form-row">
                         <div class="form-main">
@@ -170,6 +178,18 @@
         </div>
     </div>
 
+    <div class="modal-overlay" id="publicForceImportModal">
+        <div class="modal-content">
+            <h3>⚡ 强制导入公开链接</h3>
+            <p style="color: #ff6b6b;">警告：此操作将用导入的文件完全覆盖现有的公开链接数据！</p>
+            <p>确定要继续吗？</p>
+            <div class="modal-btns">
+                <button class="modal-btn modal-btn-cancel" id="publicForceImportCancel">取消</button>
+                <button class="modal-btn modal-btn-confirm" id="publicForceImportConfirm">选择文件</button>
+            </div>
+        </div>
+    </div>
+
     <div class="modal-overlay" id="privateImportModal">
         <div class="modal-content">
             <h3>📥 批量导入私密链接</h3>
@@ -177,6 +197,18 @@
             <div class="modal-btns">
                 <button class="modal-btn modal-btn-cancel" id="privateImportCancel">取消</button>
                 <button class="modal-btn modal-btn-confirm" id="privateImportConfirm">选择文件</button>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal-overlay" id="privateForceImportModal">
+        <div class="modal-content">
+            <h3>⚡ 强制导入私密链接</h3>
+            <p style="color: #ff6b6b;">警告：此操作将用导入的文件完全覆盖现有的私密链接数据！</p>
+            <p>确定要继续吗？</p>
+            <div class="modal-btns">
+                <button class="modal-btn modal-btn-cancel" id="privateForceImportCancel">取消</button>
+                <button class="modal-btn modal-btn-confirm" id="privateForceImportConfirm">选择文件</button>
             </div>
         </div>
     </div>
