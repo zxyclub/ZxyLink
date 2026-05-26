@@ -9,6 +9,17 @@ let allLinks = [];
 let currentGroup = 'all';
 let searchKeyword = '';
 
+// HTML 转义函数，防止 XSS
+function escapeHTML(str) {
+    if (typeof str !== 'string') return str;
+    return str
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#039;');
+}
+
 function initSearch() {
     const searchInput = document.getElementById('searchInput');
     const searchBtn = document.getElementById('searchBtn');
@@ -76,7 +87,7 @@ function renderCategories() {
 
     groups.forEach(group => {
         const isActive = group === currentGroup ? 'active' : '';
-        html += `<button class="category-btn ${isActive}" data-group="${group}">${group}</button>`;
+        html += `<button class="category-btn ${isActive}" data-group="${escapeHTML(group)}">${escapeHTML(group)}</button>`;
     });
     nav.innerHTML = html;
 
@@ -117,10 +128,10 @@ function renderLinks() {
     }
 
     container.innerHTML = filteredLinks.map(link => `
-        <a href="${link.url}" class="link-card" target="_blank">
-            <div class="card-icon">${link.icon || '🌐'}</div>
+        <a href="${escapeHTML(link.url)}" class="link-card" target="_blank">
+            <div class="card-icon">${escapeHTML(link.icon || '🌐')}</div>
             <div class="card-content">
-                <h3>${link.title}</h3>
+                <h3>${escapeHTML(link.title)}</h3>
             </div>
         </a>
     `).join('');

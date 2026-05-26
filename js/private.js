@@ -5,6 +5,18 @@ const PRIVATE_FILENAME = 'zxylink-private.json';
 // 浏览器 LocalStorage 中存储 GitHub Token 的键名
 const TOKEN_STORAGE_KEY = 'zxylink_private_token';
 // ===================================================
+
+// HTML 转义函数，防止 XSS
+function escapeHTML(str) {
+    if (typeof str !== 'string') return str;
+    return str
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#039;');
+}
+
 let allPrivateLinks = [];
 let currentPrivateGroup = 'all';
 let privateSearchKeyword = '';
@@ -23,6 +35,14 @@ function showSuccess(msg) {
     document.getElementById('errorMsg').style.display = 'none';
 }
 
+function clearToken() {
+    localStorage.removeItem(TOKEN_STORAGE_KEY);
+    document.getElementById('privateToken').value = '';
+    document.getElementById('linksArea').style.display = 'none';
+    document.getElementById('loginArea').style.display = 'block';
+    showSuccess('Token 已清除');
+}
+
 function renderCategories(links) {
     const nav = document.getElementById('privateCategoryNav');
     const groups = [...new Set(links.map(link => link.group).filter(Boolean))];
@@ -38,7 +58,7 @@ function renderCategories(links) {
 
     groups.forEach(group => {
         const isActive = group === currentPrivateGroup ? 'active' : '';
-        html += `<button class="category-btn ${isActive}" data-group="${group}">${group}</button>`;
+        html += `<button class="category-btn ${isActive}" data-group="${escapeHTML(group)}">${escapeHTML(group)}</button>`;
     });
     nav.innerHTML = html;
 
@@ -89,10 +109,10 @@ function renderLinks(links) {
     }
 
     container.innerHTML = filteredLinks.map(link => `
-        <a href="${link.url}" class="link-card" target="_blank">
-            <div class="card-icon">${link.icon || '🌐'}</div>
+        <a href="${escapeHTML(link.url)}" class="link-card" target="_blank">
+            <div class="card-icon">${escapeHTML(link.icon || '🌐')}</div>
             <div class="card-content">
-                <h3>${link.title}</h3>
+                <h3>${escapeHTML(link.title)}</h3>
             </div>
         </a>
     `).join('');

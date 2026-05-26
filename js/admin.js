@@ -8,6 +8,17 @@ const PRIVATE_FILENAME = 'zxylink-private.json';
 // ===================================================
 const TOKEN_KEY = 'github_token';
 
+// HTML 转义函数，防止 XSS
+function escapeHTML(str) {
+    if (typeof str !== 'string') return str;
+    return str
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#039;');
+}
+
 let currentTab = 'public';
 let publicLinks = [];
 let privateLinks = [];
@@ -57,6 +68,13 @@ function saveToken() {
         showToast('请输入 Token', true);
         toggleEditMode(false);
     }
+}
+
+function clearToken() {
+    localStorage.removeItem(TOKEN_KEY);
+    document.getElementById('githubToken').value = '';
+    toggleEditMode(false);
+    showToast('Token 已清除！');
 }
 
 function toggleEditMode(hasToken) {
@@ -175,7 +193,7 @@ function renderGroupManagement() {
             const safeIdx = 'group_' + idx;
             return `
                 <div class="group-item draggable" 
-                     data-group="${group}" 
+                     data-group="${escapeHTML(group)}" 
                      data-safe-idx="${safeIdx}"
                      draggable="true"
                      ondragstart="handleGroupDragStart(event, ${idx})"
@@ -189,7 +207,7 @@ function renderGroupManagement() {
                         <button class="order-btn" onclick="moveGroupDown(${idx})" ${idx === groups.length - 1 ? 'disabled' : ''}>↓</button>
                     </div>
                     <div class="group-info">
-                        <span class="group-name">${group}</span>
+                        <span class="group-name">${escapeHTML(group)}</span>
                         <span class="group-count">${count} 个链接</span>
                     </div>
                 </div>
@@ -200,13 +218,13 @@ function renderGroupManagement() {
             const count = links.filter(link => link.group === group).length;
             const safeIdx = 'group_' + idx;
             return `
-                <div class="group-item" data-group="${group}" data-safe-idx="${safeIdx}">
+                <div class="group-item" data-group="${escapeHTML(group)}" data-safe-idx="${safeIdx}">
                     <div class="group-info">
-                        <span class="group-name">${group}</span>
+                        <span class="group-name">${escapeHTML(group)}</span>
                         <span class="group-count">${count} 个链接</span>
                     </div>
                     <div class="group-actions">
-                        <button class="btn-edit" onclick="editGroupName('${safeIdx}', '${group}')">修改</button>
+                        <button class="btn-edit" onclick="editGroupName('${safeIdx}', '${escapeHTML(group)}')">修改</button>
                     </div>
                 </div>
             `;
@@ -298,7 +316,7 @@ function renderCategoryButtons(links, inputId) {
     }
 
     container.innerHTML = groups.map(group =>
-        `<button type="button" class="category-quick-btn" onclick="fillGroup('${inputId}', '${group}')">${group}</button>`
+        `<button type="button" class="category-quick-btn" onclick="fillGroup('${inputId}', '${escapeHTML(group)}')">${escapeHTML(group)}</button>`
     ).join('');
 }
 
@@ -321,7 +339,7 @@ function renderPublicCategories() {
 
     groups.forEach(group => {
         const isActive = group === publicCurrentGroup ? 'active' : '';
-        html += `<button class="category-btn ${isActive}" data-group="${group}">${group}</button>`;
+        html += `<button class="category-btn ${isActive}" data-group="${escapeHTML(group)}">${escapeHTML(group)}</button>`;
     });
     nav.innerHTML = html;
 
@@ -351,7 +369,7 @@ function renderPrivateCategories() {
 
     groups.forEach(group => {
         const isActive = group === privateCurrentGroup ? 'active' : '';
-        html += `<button class="category-btn ${isActive}" data-group="${group}">${group}</button>`;
+        html += `<button class="category-btn ${isActive}" data-group="${escapeHTML(group)}">${escapeHTML(group)}</button>`;
     });
     nav.innerHTML = html;
 
@@ -637,16 +655,16 @@ function renderPublicLinks() {
                         <button class="order-btn" onclick="moveUp('public', ${idx})" ${idx === 0 ? 'disabled' : ''}>↑</button>
                         <button class="order-btn" onclick="moveDown('public', ${idx})" ${idx === pageLinks.length - 1 ? 'disabled' : ''}>↓</button>
                     </div>
-                    <div class="icon-box">${link.icon}</div>
+                    <div class="icon-box">${escapeHTML(link.icon)}</div>
                     <div class="content-box">
                         <div class="info-row">
                             <div>
-                                <div class="title">${link.title}</div>
-                                <div class="group">${link.group || ''}</div>
+                                <div class="title">${escapeHTML(link.title)}</div>
+                                <div class="group">${escapeHTML(link.group || '')}</div>
                             </div>
                         </div>
                         <div class="url-row">
-                            <span class="url">${link.url}</span>
+                            <span class="url">${escapeHTML(link.url)}</span>
                         </div>
                     </div>
                 </div>
@@ -819,16 +837,16 @@ function renderPrivateLinks() {
                         <button class="order-btn" onclick="moveUp('private', ${idx})" ${idx === 0 ? 'disabled' : ''}>↑</button>
                         <button class="order-btn" onclick="moveDown('private', ${idx})" ${idx === pageLinks.length - 1 ? 'disabled' : ''}>↓</button>
                     </div>
-                    <div class="icon-box">${link.icon}</div>
+                    <div class="icon-box">${escapeHTML(link.icon)}</div>
                     <div class="content-box">
                         <div class="info-row">
                             <div>
-                                <div class="title">${link.title}</div>
-                                <div class="group">${link.group || ''}</div>
+                                <div class="title">${escapeHTML(link.title)}</div>
+                                <div class="group">${escapeHTML(link.group || '')}</div>
                             </div>
                         </div>
                         <div class="url-row">
-                            <span class="url">${link.url}</span>
+                            <span class="url">${escapeHTML(link.url)}</span>
                         </div>
                     </div>
                 </div>
@@ -939,10 +957,10 @@ window.editPublicLink = function (index) {
     item.innerHTML = `
         <div class="edit-item">
             <div class="edit-row">
-                <input type="text" value="${link.icon}" style="width:60px;text-align:center" id="editIcon">
-                <input type="text" value="${link.title}" id="editTitle" placeholder="网站名称">
-                <input value="${link.url}" id="editUrl" placeholder="链接">
-                <input type="text" value="${link.group || ''}" id="editGroup" placeholder="分组">
+                <input type="text" value="${escapeHTML(link.icon)}" style="width:60px;text-align:center" id="editIcon">
+                <input type="text" value="${escapeHTML(link.title)}" id="editTitle" placeholder="网站名称">
+                <input value="${escapeHTML(link.url)}" id="editUrl" placeholder="链接">
+                <input type="text" value="${escapeHTML(link.group || '')}" id="editGroup" placeholder="分组">
             </div>
             <div class="edit-actions">
                 <button class="btn-save" onclick="savePublicEdit(${index})">保存</button>
@@ -1001,10 +1019,10 @@ window.editPrivateLink = function (index) {
     item.innerHTML = `
         <div class="edit-item">
             <div class="edit-row">
-                <input type="text" value="${link.icon}" style="width:60px;text-align:center" id="editPrivateIcon">
-                <input type="text" value="${link.title}" id="editPrivateTitle" placeholder="网站名称">
-                <input type="text" value="${link.url}" id="editPrivateUrl" placeholder="链接">
-                <input type="text" value="${link.group || ''}" id="editPrivateGroup" placeholder="分组">
+                <input type="text" value="${escapeHTML(link.icon)}" style="width:60px;text-align:center" id="editPrivateIcon">
+                <input type="text" value="${escapeHTML(link.title)}" id="editPrivateTitle" placeholder="网站名称">
+                <input type="text" value="${escapeHTML(link.url)}" id="editPrivateUrl" placeholder="链接">
+                <input type="text" value="${escapeHTML(link.group || '')}" id="editPrivateGroup" placeholder="分组">
             </div>
             <div class="edit-actions">
                 <button class="btn-save" onclick="savePrivateEdit(${index})">保存</button>

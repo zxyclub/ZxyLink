@@ -157,7 +157,10 @@
             <div class="config-row">
                 <input type="text" id="githubToken" placeholder="GitHub Personal Access Token">
             </div>
-            <button class="btn-add" onclick="saveToken()">保存 Token</button>
+            <div style="display: flex; gap: 10px;">
+                <button class="btn-add" onclick="saveToken()">保存 Token</button>
+                <button class="btn-delete" onclick="clearToken()">清除 Token</button>
+            </div>
             <p class="help-text">
                 <strong>注意：</strong>Token 仅用于修改数据，读取无需 Token<br>
                 <a href="https://github.com/settings/tokens" target="_blank">生成 Token</a>，仅需勾选 <code>gist</code> 权限

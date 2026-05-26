@@ -24,7 +24,10 @@
                 <p id="errorMsg" class="error-msg" style="display: none;"></p>
                 <p id="successMsg" class="success-msg" style="display: none;"></p>
                 <input type="text" id="privateToken" placeholder="输入 GitHub Token">
-                <button onclick="accessPrivate()">访问</button>
+                <div style="display: flex; gap: 10px;">
+                    <button onclick="accessPrivate()">访问</button>
+                    <button onclick="clearToken()" style="background: rgba(255, 107, 107, 0.2);">清除 Token</button>
+                </div>
             </div>
         </div>
 
@@ -33,7 +36,8 @@
                 <input type="text" id="privateSearchInput" placeholder="搜索链接...">
                 <button class="search-btn" id="privateSearchBtn">🔍</button>
             </div>
-            <div style="display: flex; justify-content: flex-end; margin-bottom: 15px;">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
+                <button onclick="clearToken()" style="background: rgba(255, 107, 107, 0.2); padding: 8px 16px; border-radius: 8px; border: none; cursor: pointer; color: #ff6b6b;">🔑 清除 Token</button>
                 <button class="export-btn" id="privateExportBtn">📥 导出</button>
             </div>
             <nav class="category-nav" id="privateCategoryNav">
