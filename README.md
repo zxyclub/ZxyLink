@@ -51,16 +51,6 @@
 2. 本项目不提供任何明示或暗示的保证
 3. 用户需自行承担使用本项目的所有风险
 
-> 项目地址：
-> 
-> GitHub：https://zxyclub.github.io/ZxyLink/
-> 
-> Vercel：https://zxylink.vercel.app/
-> 
-> Cloudflare：https://zxylink.zxyhub.workers.dev/
-> 
-> 帽子云：https://zxylink-ec1rv01me.maozi.io/
-
 
 ---
 
