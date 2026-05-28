@@ -66,12 +66,35 @@ function getAllTokens() {
     return tokens.split('\n').filter(line => line.trim());
 }
 
+function updateTokenStatus() {
+    const tokens = getAllTokens();
+    const token1Status = document.getElementById('token1Status');
+    const token2Status = document.getElementById('token2Status');
+
+    if (tokens.length > 0 && tokens[0]) {
+        token1Status.textContent = '第一行 Token：已配置 ✓';
+        token1Status.classList.add('configured');
+    } else {
+        token1Status.textContent = '第一行 Token：未配置';
+        token1Status.classList.remove('configured');
+    }
+
+    if (tokens.length > 1 && tokens[1]) {
+        token2Status.textContent = '第二行 Token：已配置 ✓';
+        token2Status.classList.add('configured');
+    } else {
+        token2Status.textContent = '第二行 Token：未配置';
+        token2Status.classList.remove('configured');
+    }
+}
+
 function saveToken() {
     const tokenValue = document.getElementById('githubToken').value.trim();
     if (tokenValue) {
         localStorage.setItem(TOKEN_KEY, tokenValue);
         showToast('Token 已保存！');
         toggleEditMode(true);
+        updateTokenStatus();
         const tokens = getAllTokens();
         if (currentTab === 'private' && tokens.length > 0) {
             const privateToken = tokens[1] || '';
@@ -81,6 +104,7 @@ function saveToken() {
         localStorage.removeItem(TOKEN_KEY);
         showToast('请输入 Token', true);
         toggleEditMode(false);
+        updateTokenStatus();
     }
 }
 
@@ -88,6 +112,7 @@ function clearToken() {
     localStorage.removeItem(TOKEN_KEY);
     document.getElementById('githubToken').value = '';
     toggleEditMode(false);
+    updateTokenStatus();
     showToast('Token 已清除！');
 }
 
@@ -420,6 +445,7 @@ function loadToken() {
     if (tokens) {
         document.getElementById('githubToken').value = tokens;
     }
+    updateTokenStatus();
     toggleEditMode(!!tokens);
     renderPublicCategories();
     renderPrivateCategories();

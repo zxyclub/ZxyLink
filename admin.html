@@ -155,6 +155,10 @@
             <div class="config-row">
                 <textarea id="githubToken" rows="3" placeholder="第一行：公开链接Token（管理公开链接）&#10;第二行：私密链接Token（管理私密链接）"></textarea>
             </div>
+            <div class="token-status">
+                <span id="token1Status" class="status-item">第一行 Token：未配置</span>
+                <span id="token2Status" class="status-item">第二行 Token：未配置</span>
+            </div>
             <div style="display: flex; gap: 10px;">
                 <button class="btn-add" onclick="saveToken()">保存 Token</button>
                 <button class="btn-delete" onclick="clearToken()">清除 Token</button>

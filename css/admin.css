@@ -61,6 +61,26 @@ textarea::placeholder {
     color: #666;
 }
 
+.token-status {
+    display: flex;
+    gap: 20px;
+    margin-bottom: 16px;
+    flex-wrap: wrap;
+}
+
+.status-item {
+    font-size: 0.85rem;
+    padding: 4px 12px;
+    border-radius: 12px;
+    background: rgba(255, 107, 107, 0.2);
+    color: #ff6b6b;
+}
+
+.status-item.configured {
+    background: rgba(0, 255, 136, 0.2);
+    color: #00ff88;
+}
+
 .form-row {
     display: flex;
     flex-direction: column;
