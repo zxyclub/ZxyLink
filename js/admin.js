@@ -315,13 +315,32 @@ function renderCategoryButtons(links, inputId) {
         return;
     }
 
-    container.innerHTML = groups.map(group =>
-        `<button type="button" class="category-quick-btn" onclick="fillGroup('${inputId}', '${escapeHTML(group)}')">${escapeHTML(group)}</button>`
+    container.innerHTML = groups.map((group, idx) =>
+        `<button type="button" class="category-quick-btn" data-group="${escapeHTML(group)}" data-input-id="${inputId}">${escapeHTML(group)}</button>`
     ).join('');
+
+    container.querySelectorAll('.category-quick-btn').forEach(btn => {
+        btn.addEventListener('click', function() {
+            const group = this.dataset.group;
+            const inputId = this.dataset.inputId;
+            fillGroup(inputId, group);
+        });
+    });
 }
 
 window.fillGroup = function(inputId, group) {
     document.getElementById(inputId).value = group;
+    const iconInputId = inputId.replace('Group', 'Icon');
+    const iconInput = document.getElementById(iconInputId);
+    if (iconInput && group.length > 0) {
+        const emojiRegex = /(\p{Emoji_Presentation}|\p{Emoji}\uFE0F)/gu;
+        const match = group.match(emojiRegex);
+        if (match && match[0]) {
+            iconInput.value = match[0];
+        } else {
+            iconInput.value = group[0];
+        }
+    }
 };
 
 function renderPublicCategories() {
