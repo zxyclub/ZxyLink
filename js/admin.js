@@ -1,9 +1,11 @@
 // ==================== GIST 配置 ====================
+//公token
 // 修改这里可以换成自己的 Gist ID
 const PUBLIC_GIST_ID = 'd12a422a770678dcbb46b8f8050ad2c6';
 // 修改这里可以换成自己的 GitHub 用户名
 const GIST_OWNER = 'zxyclub';
 const PUBLIC_FILENAME = 'zxylinks.json';
+//私token
 const PRIVATE_FILENAME = 'zxylink-private.json';
 // ===================================================
 const TOKEN_KEY = 'github_token';
