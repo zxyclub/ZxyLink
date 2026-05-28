@@ -20,10 +20,10 @@
         <div id="loginArea">
             <div class="login-card">
                 <h2>🔧 访问调试内容</h2>
-                <p>输入 Token 访问调试数据</p>
+                <p>输入私密 Token 访问调试数据</p>
                 <p id="errorMsg" class="error-msg" style="display: none;"></p>
                 <p id="successMsg" class="success-msg" style="display: none;"></p>
-                <input type="text" id="privateToken" placeholder="输入 GitHub Token">
+                <textarea id="privateToken" rows="3" placeholder="输入私密 Token（第二行 Token 用于调试页面）"></textarea>
                 <div style="display: flex; gap: 10px;">
                     <button onclick="accessPrivate()">访问</button>
                     <button onclick="clearToken()" style="background: rgba(255, 107, 107, 0.2);">清除 Token</button>

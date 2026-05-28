@@ -36,7 +36,7 @@ let publicReorderMode = false;
 let privateReorderMode = false;
 let publicTempLinks = [];
 let privateTempLinks = [];
-let publicReorderGroup = 'all'; // 记录排序时的分组
+let publicReorderGroup = 'all';
 let privateReorderGroup = 'all';
 let groupReorderMode = false;
 let tempGroups = [];
@@ -50,18 +50,30 @@ function showToast(msg, isError = false) {
     setTimeout(() => toast.classList.remove('show'), 3000);
 }
 
-function getToken() {
-    return localStorage.getItem(TOKEN_KEY);
+function getToken(type = 'public') {
+    const tokens = localStorage.getItem(TOKEN_KEY) || '';
+    const lines = tokens.split('\n').filter(line => line.trim());
+    if (type === 'private') {
+        return lines[1] || '';
+    }
+    return lines[0] || '';
+}
+
+function getAllTokens() {
+    const tokens = localStorage.getItem(TOKEN_KEY) || '';
+    return tokens.split('\n').filter(line => line.trim());
 }
 
 function saveToken() {
-    const token = document.getElementById('githubToken').value.trim();
-    if (token) {
-        localStorage.setItem(TOKEN_KEY, token);
+    const tokenValue = document.getElementById('githubToken').value.trim();
+    if (tokenValue) {
+        localStorage.setItem(TOKEN_KEY, tokenValue);
         showToast('Token 已保存！');
         toggleEditMode(true);
-        if (currentTab === 'private') {
-            loadPrivateLinks(token);
+        const tokens = getAllTokens();
+        if (currentTab === 'private' && tokens.length > 0) {
+            const privateToken = tokens[1] || '';
+            loadPrivateLinks(privateToken);
         }
     } else {
         localStorage.removeItem(TOKEN_KEY);
@@ -127,9 +139,10 @@ function switchTab(tab) {
         document.getElementById('publicSection').classList.add('hidden');
         document.getElementById('privateSection').classList.remove('hidden');
         document.getElementById('groupsSection').classList.add('hidden');
-        const token = getToken();
-        if (token && privateLinks.length === 0) {
-            loadPrivateLinks(token);
+        const tokens = getAllTokens();
+        if (tokens.length > 0 && privateLinks.length === 0) {
+            const privateToken = tokens[1] || '';
+            loadPrivateLinks(privateToken);
         }
     } else if (tab === 'groups') {
         document.getElementById('publicSection').classList.add('hidden');
@@ -159,7 +172,6 @@ function renderGroupManagement() {
         }
     }
 
-    // 显示/隐藏控件
     const batchActions = document.getElementById('groupBatchActions');
     const reorderControls = document.getElementById('groupReorderControls');
     const reorderBtn = document.getElementById('groupReorderBtn');
@@ -231,7 +243,6 @@ function renderGroupManagement() {
         }).join('');
     }
 
-    // 绑定分组管理导航
     const nav = document.getElementById('groupsCategoryNav');
     nav.querySelectorAll('.category-btn').forEach(btn => {
         btn.removeEventListener('click', handleGroupNavClick);
@@ -276,7 +287,6 @@ window.saveGroupName = async function(safeIdx, oldGroupName) {
         return;
     }
 
-    // 更新对应类型的链接
     let hasChanges = false;
     if (groupCurrentType === 'public') {
         publicLinks.forEach(link => {
@@ -404,11 +414,11 @@ function renderPrivateCategories() {
 }
 
 function loadToken() {
-    const token = getToken();
-    if (token) {
-        document.getElementById('githubToken').value = token;
+    const tokens = localStorage.getItem(TOKEN_KEY);
+    if (tokens) {
+        document.getElementById('githubToken').value = tokens;
     }
-    toggleEditMode(!!token);
+    toggleEditMode(!!tokens);
     renderPublicCategories();
     renderPrivateCategories();
 }
@@ -479,7 +489,7 @@ async function loadPrivateLinks(token) {
 }
 
 async function savePublicLinks() {
-    const token = getToken();
+    const token = getToken('public');
     if (!token) {
         showToast('请先配置 Token', true);
         return;
@@ -515,9 +525,9 @@ async function savePublicLinks() {
 }
 
 async function savePrivateLinks() {
-    const token = getToken();
+    const token = getToken('private');
     if (!token) {
-        showToast('请先配置 Token', true);
+        showToast('请先配置私密 Token', true);
         return;
     }
 
@@ -580,9 +590,9 @@ async function savePrivateLinks() {
 
 function renderPublicLinks() {
     const container = document.getElementById('linksList');
-    const hasToken = getToken();
+    const tokens = getAllTokens();
+    const hasToken = tokens.length > 0;
 
-    // 先初始化 filteredLinks
     let filteredLinks;
     if (publicReorderMode) {
         filteredLinks = publicTempLinks;
@@ -602,7 +612,6 @@ function renderPublicLinks() {
         }
     }
 
-    // 再显示/隐藏排序控件和按钮
     const batchActions = document.getElementById('publicBatchActions');
     const reorderControls = document.getElementById('publicReorderControls');
     const pagination = document.getElementById('publicPagination');
@@ -650,7 +659,7 @@ function renderPublicLinks() {
 
     let pageLinks;
     if (publicReorderMode) {
-        pageLinks = filteredLinks; // 不分页，显示所有
+        pageLinks = filteredLinks;
     } else {
         const startIdx = (publicCurrentPage - 1) * PAGE_SIZE;
         pageLinks = filteredLinks.slice(startIdx, startIdx + PAGE_SIZE);
@@ -762,9 +771,9 @@ window.goPublicPage = function(page) {
 
 function renderPrivateLinks() {
     const container = document.getElementById('privateLinksList');
-    const hasToken = getToken();
+    const tokens = getAllTokens();
+    const hasToken = tokens.length > 0;
 
-    // 先初始化 filteredLinks
     let filteredLinks;
     if (privateReorderMode) {
         filteredLinks = privateTempLinks;
@@ -784,7 +793,6 @@ function renderPrivateLinks() {
         }
     }
 
-    // 再显示/隐藏排序控件和按钮
     const batchActions = document.getElementById('privateBatchActions');
     const reorderControls = document.getElementById('privateReorderControls');
     const pagination = document.getElementById('privatePagination');
@@ -832,7 +840,7 @@ function renderPrivateLinks() {
 
     let pageLinks;
     if (privateReorderMode) {
-        pageLinks = filteredLinks; // 不分页，显示所有
+        pageLinks = filteredLinks;
     } else {
         const startIdx = (privateCurrentPage - 1) * PAGE_SIZE;
         pageLinks = filteredLinks.slice(startIdx, startIdx + PAGE_SIZE);
@@ -1004,9 +1012,7 @@ window.savePublicEdit = async function (index) {
 window.deletePublicLink = async function (index) {
     if (confirm('确定要删除这个链接吗？')) {
         publicLinks.splice(index, 1);
-        // 清理选中索引
         publicSelectedIndices = publicSelectedIndices.filter(i => i !== index);
-        // 更新大于删除索引的选中索引
         publicSelectedIndices = publicSelectedIndices.map(i => i > index ? i - 1 : i);
         await savePublicLinks();
         renderPublicLinks();
@@ -1066,9 +1072,7 @@ window.savePrivateEdit = async function (index) {
 window.deletePrivateLink = async function (index) {
     if (confirm('确定要删除这个链接吗？')) {
         privateLinks.splice(index, 1);
-        // 清理选中索引
         privateSelectedIndices = privateSelectedIndices.filter(i => i !== index);
-        // 更新大于删除索引的选中索引
         privateSelectedIndices = privateSelectedIndices.map(i => i > index ? i - 1 : i);
         await savePrivateLinks();
         renderPrivateLinks();
@@ -1235,56 +1239,6 @@ function handlePrivateFileImport(event) {
     reader.readAsText(file);
 }
 
-document.getElementById('importPublicBtn').addEventListener('click', importPublicLinks);
-document.getElementById('importPrivateBtn').addEventListener('click', importPrivateLinks);
-document.getElementById('forceImportPublicBtn').addEventListener('click', forceImportPublicLinks);
-document.getElementById('forceImportPrivateBtn').addEventListener('click', forceImportPrivateLinks);
-document.getElementById('publicFileInput').addEventListener('change', handlePublicFileImport);
-document.getElementById('privateFileInput').addEventListener('change', handlePrivateFileImport);
-document.getElementById('publicForceFileInput').addEventListener('change', handlePublicForceFileImport);
-document.getElementById('privateForceFileInput').addEventListener('change', handlePrivateForceFileImport);
-
-document.getElementById('publicImportCancel').addEventListener('click', closePublicImportModal);
-document.getElementById('privateImportCancel').addEventListener('click', closePrivateImportModal);
-document.getElementById('publicImportConfirm').addEventListener('click', () => {
-    document.getElementById('publicFileInput').click();
-});
-document.getElementById('privateImportConfirm').addEventListener('click', () => {
-    document.getElementById('privateFileInput').click();
-});
-
-document.getElementById('publicForceImportCancel').addEventListener('click', closePublicForceImportModal);
-document.getElementById('privateForceImportCancel').addEventListener('click', closePrivateForceImportModal);
-document.getElementById('publicForceImportConfirm').addEventListener('click', () => {
-    document.getElementById('publicForceFileInput').click();
-});
-document.getElementById('privateForceImportConfirm').addEventListener('click', () => {
-    document.getElementById('privateForceFileInput').click();
-});
-
-document.getElementById('publicImportModal').addEventListener('click', (e) => {
-    if (e.target === document.getElementById('publicImportModal')) {
-        closePublicImportModal();
-    }
-});
-document.getElementById('privateImportModal').addEventListener('click', (e) => {
-    if (e.target === document.getElementById('privateImportModal')) {
-        closePrivateImportModal();
-    }
-});
-
-document.getElementById('publicForceImportModal').addEventListener('click', (e) => {
-    if (e.target === document.getElementById('publicForceImportModal')) {
-        closePublicForceImportModal();
-    }
-});
-document.getElementById('privateForceImportModal').addEventListener('click', (e) => {
-    if (e.target === document.getElementById('privateForceImportModal')) {
-        closePrivateForceImportModal();
-    }
-});
-
-// 强制导入功能
 function forceImportPublicLinks() {
     document.getElementById('publicForceImportModal').classList.add('show');
 }
@@ -1316,7 +1270,6 @@ function handlePublicForceFileImport(event) {
                 return;
             }
 
-            // 强制导入：直接替换所有公开链接
             publicLinks.length = 0;
             for (const link of importedLinks) {
                 if (link.title && link.url) {
@@ -1357,7 +1310,6 @@ function handlePrivateForceFileImport(event) {
                 return;
             }
 
-            // 强制导入：直接替换所有私密链接
             privateLinks.length = 0;
             for (const link of importedLinks) {
                 if (link.title && link.url) {
@@ -1383,7 +1335,6 @@ function handlePrivateForceFileImport(event) {
     reader.readAsText(file);
 }
 
-// 批量删除功能
 window.toggleSelectItem = function(type, index) {
     const selectedIndices = type === 'public' ? publicSelectedIndices : privateSelectedIndices;
     const idx = selectedIndices.indexOf(index);
@@ -1425,7 +1376,6 @@ window.toggleSelectAll = function(type) {
             }
         }
         
-        // 只选择当前分页的链接
         const startIdx = (currentPage - 1) * PAGE_SIZE;
         const endIdx = startIdx + PAGE_SIZE;
         const pageLinks = filteredLinks.slice(startIdx, endIdx);
@@ -1472,7 +1422,6 @@ function updateBatchUI(type) {
         }
     }
     
-    // 只检查当前分页的链接是否都被选中
     const startIdx = (currentPage - 1) * PAGE_SIZE;
     const endIdx = startIdx + PAGE_SIZE;
     const pageLinks = filteredLinks.slice(startIdx, endIdx);
@@ -1496,7 +1445,6 @@ window.batchDelete = async function(type) {
         return;
     }
     
-    // 从大到小排序，避免索引偏移
     const sortedIndices = [...selectedIndices].sort((a, b) => b - a);
     sortedIndices.forEach(idx => {
         links.splice(idx, 1);
@@ -1515,7 +1463,6 @@ window.batchDelete = async function(type) {
     renderPrivateLinks();
 };
 
-// 上下移动链接
 window.moveUp = function(type, index) {
     const tempLinks = type === 'public' ? publicTempLinks : privateTempLinks;
     if (index <= 0) return;
@@ -1546,10 +1493,8 @@ window.moveDown = function(type, index) {
     }
 };
 
-// 分组排序相关变量
 let draggedGroupIndex = null;
 
-// 分组排序功能
 window.toggleGroupReorderMode = function() {
     groupReorderMode = !groupReorderMode;
     if (groupReorderMode) {
@@ -1572,13 +1517,10 @@ window.cancelGroupOrder = function() {
 
 window.saveGroupOrder = async function() {
     if (groupCurrentType === 'public') {
-        // 按新的分组顺序重新排列链接
         const newPublicLinks = [];
-        // 先按顺序添加有分组的链接
         tempGroups.forEach(group => {
             newPublicLinks.push(...publicLinks.filter(link => link.group === group));
         });
-        // 再添加未分组的链接
         newPublicLinks.push(...publicLinks.filter(link => !link.group));
         publicLinks = newPublicLinks;
         
@@ -1588,7 +1530,6 @@ window.saveGroupOrder = async function() {
         renderPublicCategories();
         showToast('分组顺序已保存');
     } else {
-        // 私密链接
         const newPrivateLinks = [];
         tempGroups.forEach(group => {
             newPrivateLinks.push(...privateLinks.filter(link => link.group === group));
@@ -1627,7 +1568,6 @@ window.moveGroupDown = function(index) {
     renderGroupManagement();
 };
 
-// 分组拖拽功能
 function handleGroupDragStart(e, index) {
     draggedGroupIndex = index;
     e.target.classList.add('dragging');
@@ -1652,13 +1592,11 @@ function handleGroupDrop(e, targetIndex) {
     renderGroupManagement();
 }
 
-// 调整顺序功能
 window.toggleReorderMode = function(type) {
     if (type === 'public') {
         publicReorderMode = !publicReorderMode;
         publicReorderGroup = publicCurrentGroup;
         if (publicReorderMode) {
-            // 只保存当前分组的链接
             if (publicCurrentGroup === 'all') {
                 publicTempLinks = [...publicLinks];
             } else if (publicCurrentGroup === 'ungrouped') {
@@ -1672,7 +1610,6 @@ window.toggleReorderMode = function(type) {
         privateReorderMode = !privateReorderMode;
         privateReorderGroup = privateCurrentGroup;
         if (privateReorderMode) {
-            // 只保存当前分组的链接
             if (privateCurrentGroup === 'all') {
                 privateTempLinks = [...privateLinks];
             } else if (privateCurrentGroup === 'ungrouped') {
@@ -1701,30 +1638,23 @@ window.cancelReorder = function(type) {
 
 window.saveReorder = async function(type) {
     if (type === 'public') {
-        // 重新构建公开链接数组
         const newPublicLinks = [];
         if (publicReorderGroup === 'all') {
-            // 如果是全部分组，直接替换
             publicLinks = [...publicTempLinks];
         } else if (publicReorderGroup === 'ungrouped') {
-            // 未分组，替换未分组的链接
             publicLinks.forEach(link => {
                 if (link.group) {
                     newPublicLinks.push(link);
                 }
             });
-            // 添加排序后的未分组链接
             newPublicLinks.push(...publicTempLinks);
             publicLinks = newPublicLinks;
         } else {
-            // 指定分组，替换该分组的链接
-            // 先添加其他分组的链接
             publicLinks.forEach(link => {
                 if (link.group !== publicReorderGroup) {
                     newPublicLinks.push(link);
                 }
             });
-            // 再添加排序后的该分组链接
             newPublicLinks.push(...publicTempLinks);
             publicLinks = newPublicLinks;
         }
@@ -1736,7 +1666,6 @@ window.saveReorder = async function(type) {
         renderPublicLinks();
         showToast('顺序已保存');
     } else {
-        // 重新构建私密链接数组
         const newPrivateLinks = [];
         if (privateReorderGroup === 'all') {
             privateLinks = [...privateTempLinks];
@@ -1767,7 +1696,6 @@ window.saveReorder = async function(type) {
     }
 };
 
-// 拖拽功能变量
 let draggedIndex = null;
 let dragType = null;
 
@@ -1817,3 +1745,53 @@ function handleDrop(e, type, targetIdx) {
         renderPrivateLinks();
     }
 }
+
+// Event listeners for import modals
+document.getElementById('importPublicBtn').addEventListener('click', importPublicLinks);
+document.getElementById('importPrivateBtn').addEventListener('click', importPrivateLinks);
+document.getElementById('forceImportPublicBtn').addEventListener('click', forceImportPublicLinks);
+document.getElementById('forceImportPrivateBtn').addEventListener('click', forceImportPrivateLinks);
+document.getElementById('publicFileInput').addEventListener('change', handlePublicFileImport);
+document.getElementById('privateFileInput').addEventListener('change', handlePrivateFileImport);
+document.getElementById('publicForceFileInput').addEventListener('change', handlePublicForceFileImport);
+document.getElementById('privateForceFileInput').addEventListener('change', handlePrivateForceFileImport);
+
+document.getElementById('publicImportCancel').addEventListener('click', closePublicImportModal);
+document.getElementById('privateImportCancel').addEventListener('click', closePrivateImportModal);
+document.getElementById('publicImportConfirm').addEventListener('click', () => {
+    document.getElementById('publicFileInput').click();
+});
+document.getElementById('privateImportConfirm').addEventListener('click', () => {
+    document.getElementById('privateFileInput').click();
+});
+
+document.getElementById('publicForceImportCancel').addEventListener('click', closePublicForceImportModal);
+document.getElementById('privateForceImportCancel').addEventListener('click', closePrivateForceImportModal);
+document.getElementById('publicForceImportConfirm').addEventListener('click', () => {
+    document.getElementById('publicForceFileInput').click();
+});
+document.getElementById('privateForceImportConfirm').addEventListener('click', () => {
+    document.getElementById('privateForceFileInput').click();
+});
+
+document.getElementById('publicImportModal').addEventListener('click', (e) => {
+    if (e.target === document.getElementById('publicImportModal')) {
+        closePublicImportModal();
+    }
+});
+document.getElementById('privateImportModal').addEventListener('click', (e) => {
+    if (e.target === document.getElementById('privateImportModal')) {
+        closePrivateImportModal();
+    }
+});
+
+document.getElementById('publicForceImportModal').addEventListener('click', (e) => {
+    if (e.target === document.getElementById('publicForceImportModal')) {
+        closePublicForceImportModal();
+    }
+});
+document.getElementById('privateForceImportModal').addEventListener('click', (e) => {
+    if (e.target === document.getElementById('privateForceImportModal')) {
+        closePrivateForceImportModal();
+    }
+});

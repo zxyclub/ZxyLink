@@ -2,11 +2,10 @@
 // 私密链接是通过 Token 动态查找匹配的文件名的 Gist
 // 修改这里可以换成自己的私密链接文件名
 const PRIVATE_FILENAME = 'zxylink-private.json';
-// 浏览器 LocalStorage 中存储 GitHub Token 的键名
-const TOKEN_STORAGE_KEY = 'zxylink_private_token';
 // ===================================================
 
-// HTML 转义函数，防止 XSS
+const TOKEN_STORAGE_KEY = 'github_token';
+
 function escapeHTML(str) {
     if (typeof str !== 'string') return str;
     return str
@@ -33,6 +32,12 @@ function showSuccess(msg) {
     successMsg.textContent = msg;
     successMsg.style.display = 'block';
     document.getElementById('errorMsg').style.display = 'none';
+}
+
+function getPrivateToken() {
+    const tokens = localStorage.getItem(TOKEN_STORAGE_KEY) || '';
+    const lines = tokens.split('\n').filter(line => line.trim());
+    return lines[1] || '';
 }
 
 function clearToken() {
@@ -120,7 +125,6 @@ function renderLinks(links) {
 
 async function loadPrivateLinks(token) {
     try {
-        // 获取用户所有 Gist
         const response = await fetch('https://api.github.com/gists', {
             headers: {
                 'Authorization': 'Bearer ' + token,
@@ -134,7 +138,6 @@ async function loadPrivateLinks(token) {
 
         const gists = await response.json();
 
-        // 查找包含目标文件的 Gist
         let targetGistId = null;
         for (const gist of gists) {
             if (gist.files && gist.files[PRIVATE_FILENAME]) {
@@ -147,7 +150,6 @@ async function loadPrivateLinks(token) {
             throw new Error(`未找到包含 ${PRIVATE_FILENAME} 的 Gist`);
         }
 
-        // 获取完整的 Gist 内容（包含文件内容）
         const gistResponse = await fetch(`https://api.github.com/gists/${targetGistId}`, {
             headers: {
                 'Authorization': 'Bearer ' + token,
@@ -170,14 +172,12 @@ async function loadPrivateLinks(token) {
         }
         const links = JSON.parse(fileContent);
 
-        // 显示内容区域，隐藏登录区域
         document.getElementById('loginArea').style.display = 'none';
         document.getElementById('linksArea').style.display = 'block';
 
         allPrivateLinks = links;
         renderCategories(links);
         renderLinks(links);
-        localStorage.setItem(TOKEN_STORAGE_KEY, token);
         showSuccess('访问成功！');
 
     } catch (error) {
@@ -187,26 +187,37 @@ async function loadPrivateLinks(token) {
 }
 
 function accessPrivate() {
-    const token = document.getElementById('privateToken').value.trim();
+    const tokenInput = document.getElementById('privateToken').value.trim();
 
-    if (!token) {
+    if (!tokenInput) {
         showError('请输入 Token');
         return;
     }
 
+    const lines = tokenInput.split('\n').filter(line => line.trim());
+    const token = lines[0] || '';
+
+    if (!token) {
+        showError('请输入有效的 Token');
+        return;
+    }
+
+    localStorage.setItem(TOKEN_STORAGE_KEY, tokenInput);
     loadPrivateLinks(token);
 }
 
-// 页面加载时检查是否有保存的 Token
 document.addEventListener('DOMContentLoaded', () => {
-    const savedToken = localStorage.getItem(TOKEN_STORAGE_KEY);
-    if (savedToken) {
-        document.getElementById('privateToken').value = savedToken;
-        loadPrivateLinks(savedToken);
+    const savedTokens = localStorage.getItem(TOKEN_STORAGE_KEY);
+    if (savedTokens) {
+        document.getElementById('privateToken').value = savedTokens;
+        const lines = savedTokens.split('\n').filter(line => line.trim());
+        const token = lines[1] || '';
+        if (token) {
+            loadPrivateLinks(token);
+        }
     }
 });
 
-// 按下回车访问
 document.getElementById('privateToken').addEventListener('keypress', (e) => {
     if (e.key === 'Enter') {
         accessPrivate();

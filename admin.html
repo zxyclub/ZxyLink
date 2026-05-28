@@ -153,7 +153,7 @@
         <div class="admin-section config-section" id="tokenSection">
             <h3>🔑 GitHub Token 配置</h3>
             <div class="config-row">
-                <input type="text" id="githubToken" placeholder="GitHub Personal Access Token">
+                <textarea id="githubToken" rows="3" placeholder="第一行：公开链接Token（管理公开链接）&#10;第二行：私密链接Token（管理私密链接）"></textarea>
             </div>
             <div style="display: flex; gap: 10px;">
                 <button class="btn-add" onclick="saveToken()">保存 Token</button>
@@ -161,6 +161,7 @@
             </div>
             <p class="help-text">
                 <strong>注意：</strong>Token 仅用于修改数据，读取无需 Token<br>
+                第一行用于公开链接操作，第二行用于私密链接操作<br>
                 <a href="https://github.com/settings/tokens" target="_blank">生成 Token</a>，仅需勾选 <code>gist</code> 权限
             </p>
         </div>
